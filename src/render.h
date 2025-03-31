@@ -8,7 +8,7 @@ static void __forceinline init_shaders() {
 		int _programs[] = {programs[0], programs[1], programs[2]};
 		gl_debug(_programs);
 		// gl_debug_nocheck(_programs);
-		//reload_from_disk();
+		reload_from_disk();
 }
 
 static void __forceinline init_resources() {

@@ -58,10 +58,13 @@ vec3 cyclic(vec3 p, float pers, float lacu) {
 
 
 
+
+
 void main(){
 	uint samp = gl_GlobalInvocationID.x;
 	vec2 s = vec2(0);
 	float T = float(samp) / 44100.;
+	float Tt = T;
 
 	//float interp = 
 
@@ -84,14 +87,23 @@ void main(){
 	//if(true){
 		float md = 2. + sin(T)*0.0002;
 
-		T *= 4.;
+
+		float sc = 4.;
+		T *= sc;
 
 		float id = floor(-T/md);
+
 		//T = fract(-T*md + h(floor(T*md)).x*100.)*0.3;
-		T = mod(-T , md) + h(id).x*4. + (T/4. - 260.)*0.6;
-		genv = smoothstep(0.,0.04,mod(-T , md)) * smoothstep(md,md - .04,mod(-T , md));
+		float mt = mod(-T , md);
+		T = mt + h(id).x*sc + (T/sc - 260.)*0.6;
+		genv = 
+			//smoothstep(0.,0.2,mod(-T , md)) 
+			//* smoothstep(md,md - .04,mod(-T , md))
+			smoothstep(0.,md*0.04,mt) 
+			* smoothstep(md,md*0.98,mt)
+			;
 		genv *= 4.;
-		TT *= 0.5 + h(id).z*0.02;
+		TT *= 0.25 + 0.25*float(Tt > 260.) + h(id).z*0.02*1.;
 		//TT -= h(id).x*10.;
 		//samp += int(h(id).x*10000.);
 	} else {

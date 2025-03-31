@@ -47,6 +47,7 @@ vec3 mix_cols(float idx){
 
 
 
+
 void main( ){
 	vec2 uv = gl_FragCoord.xy/R.xy;
 
@@ -63,7 +64,7 @@ void main( ){
 
 	float K_COL = 0.03
 		+ 0.1* smoothstep(90.,190.,T)
-		- end + 10.*endb * smoothstep(4.,0.,mod(T,4.));
+		- end + 4.*endb * smoothstep(4.,0.,mod(T,4.));
 	;
 	float K_GLITCH = 0.;
 	K_GLITCH += 
@@ -121,7 +122,8 @@ void main( ){
 				offs = ivec2(offs.y,offs.x);
 			}
 			if(T > 316 && hash_f() > 0.5){
-				offs = ivec2(offs.y,offs.x)/10;
+				//offs = ivec2(offs.y,offs.x)/10;
+				offs -= offs;
 			}
 			
 			hist[hist_id] =	hist[get_hist_id((ivec2(gl_FragCoord.xy) + offs))];
@@ -132,6 +134,10 @@ void main( ){
 	if(end > 0.1){
 		//C*= 0.1;
 		C = 1.-C;
+	}
+	if(T > 350.){
+		C = vec4(dot(C,C) < 0.5);
+		//if(dot(C,C) > 0.5){}
 	}
 //    fragColor = vec4(1,0,0,1);    
 	//fragColor = texture(tex_music, uv);

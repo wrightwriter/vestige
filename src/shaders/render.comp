@@ -57,15 +57,18 @@ float hash_f_p_neg(float prob){
 
 
 
+
+
 void main( ){
     uint id = uint(gl_GlobalInvocationID.x); // to cast or not to cast?
     seed = id + 1111111u;
 
 	T = Tt;
+	T = mod(T,360.);
 
 	float end = smoothstep(250.,250.1,T);
 
-	T -= hash_f()*10.*end;
+	//T -= hash_f()*10.*end;
 	//T = mod()
 
 
@@ -99,6 +102,12 @@ void main( ){
 		+ 1.* smoothstep(90.,150.,T)
 	;
 
+
+	/*
+			if(T < 316){
+				p /= p.z * K_PERSP;
+			}
+	*/
 	if(T < 10.){
 		K_CUBE = false;
 	}
@@ -218,7 +227,10 @@ void main( ){
 		//    }
 			p.z += 4.;
 			float z = p.z;
-			p /= p.z * K_PERSP;
+
+			if(T < 316){
+				p /= p.z * K_PERSP;
+			}
 			p.z = z;
 			p.x /= R.x/R.y;
 			q = p;

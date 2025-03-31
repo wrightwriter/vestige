@@ -10,7 +10,7 @@
 #define XRES										1280
 #define YRES										720
 
-#define SONG_DURATION						380
+#define SONG_DURATION						420
 
 #define MUSICFB									framebuffers[0]
 #define PROG_RENDER							programs[0]
