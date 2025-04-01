@@ -13,6 +13,7 @@
 // Assuming a maximum of 100 paths, adjust if needed.
 #if OPENGL_DEBUG
 	// Global array of file paths
+	static const char* shader_strings[100];
 	static const char* file_paths[100];
 	static unsigned int shader_types[100];
 	static size_t shaders_count = 0;

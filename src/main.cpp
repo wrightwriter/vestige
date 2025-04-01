@@ -1,11 +1,13 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
-#define EDITOR									1
+#define EDITOR									0
 #define EDITOR_FORCE_RELOAD_FROM_DISK			0
-#define OPENGL_DEBUG						1
-#define FULLSCREEN							0
-#define VSYNC										1
+#define VALIDATE_SHADERS_GLSLANG				0
+#define OPENGL_DEBUG							0
+#define FULLSCREEN								0
+#define VSYNC									1
 #define AUTORES									0
+
 
 
 #define XRES										1280
@@ -171,6 +173,7 @@ static void __forceinline init_window() {
 
 static int __forceinline add_program(unsigned int program_type, const char* str, const char* path) {
 	#if OPENGL_DEBUG
+		shader_strings[shaders_count] = str;
 		file_paths[shaders_count] = path;
 		shader_types[shaders_count] = program_type;
 		shaders_count++;

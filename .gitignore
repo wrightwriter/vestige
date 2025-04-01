@@ -6,6 +6,7 @@
 out/
 *.wav
 *.mp3
+shader.glsl
 
 # User-specific files
 *.suo

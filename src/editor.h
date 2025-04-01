@@ -10,6 +10,74 @@ void editor_print_to_console(const char* message) {
 }
 
 
+void dbg_validate_shaders(){
+	#if EDITOR && VALIDATE_SHADERS_GLSLANG
+    // char shader_validation_errors[MAX_ERROR_SIZE] = {0};
+    for (size_t i = 0; i < shaders_count; i++) {
+        // Write shader to a temporary file
+        FILE* file = fopen("shader.glsl", "w");
+        if (!file) {
+            MessageBoxA(0, "Failed to create temp shader file.", "Error", MB_OK | MB_ICONERROR);
+            return;
+        }
+        fprintf(file, "%s", shader_strings[i]);
+        fclose(file);
+
+				const char* shaderSuffix;
+				switch (shader_types[i]) {
+						case GL_VERTEX_SHADER: shaderSuffix = "vert"; break; 
+						case GL_FRAGMENT_SHADER: shaderSuffix = "frag"; break; 
+						case GL_COMPUTE_SHADER: shaderSuffix = "comp"; break; 
+						default: shaderSuffix = "unknown"; break;
+				}
+
+        char command[512];
+        snprintf(command, sizeof(command), "\"glslangValidator.exe\" -e main --auto-map-bindings --auto-map-locations --glsl-version 460 --no-link -S %s shader.glsl",
+                 shaderSuffix);
+
+        SECURITY_ATTRIBUTES saAttr = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+        HANDLE hReadPipe, hWritePipe;
+        CreatePipe(&hReadPipe, &hWritePipe, &saAttr, 0);
+
+        STARTUPINFOA si = {sizeof(STARTUPINFO)};
+        si.dwFlags = STARTF_USESTDHANDLES;
+        si.hStdOutput = hWritePipe;
+        si.hStdError = hWritePipe;
+
+        PROCESS_INFORMATION pi;
+        if (CreateProcessA(NULL, command, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+            CloseHandle(hWritePipe);
+
+            char buffer[(4096 * 40)] = {0};
+            DWORD bytesRead;
+            ReadFile(hReadPipe, buffer, sizeof(buffer) - 1, &bytesRead, NULL);
+            buffer[bytesRead] = '\0'; // Null-terminate
+
+            CloseHandle(hReadPipe);
+
+            if (strstr(buffer, "ERROR")) { // If output contains "ERROR", log it
+            	MessageBoxA(0, "Validation fail", "Error", MB_OK | MB_ICONERROR);
+                // strcat(shader_validation_errors, "------ SHADER ");
+                // strcat(shader_validation_errors, file_paths[i]);
+                // strcat(shader_validation_errors, " ------\n");
+                // strcat(shader_validation_errors, buffer);
+                // strcat(shader_validation_errors, "\n");
+            }
+        		editor_print_to_console(buffer);
+
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        } else {
+            MessageBoxA(0, "Failed to run glslangValidator.exe", "Error", MB_OK | MB_ICONERROR);
+            return;
+        }
+    }
+	#endif
+}
+
+
+
 #if EDITOR
 	static HWND hwnd;
 	static HWND hwndConsole; 

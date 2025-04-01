@@ -7,6 +7,7 @@ static void __forceinline init_shaders() {
 		programs[2] = add_program(GL_COMPUTE_SHADER, music_comp, "src/shaders/music.comp");
 		int _programs[] = {programs[0], programs[1], programs[2]};
 		dbg_check_shader_compilation(_programs);
+		dbg_validate_shaders();
 		// dbg_nocheck_shader_compilation(_programs);
 		editor_reload_from_disk();
 }
