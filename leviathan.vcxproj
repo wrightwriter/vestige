@@ -650,7 +650,7 @@
     <Link>
       <AdditionalOptions>
       </AdditionalOptions>
-      <AdditionalDependencies>opengl32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;winmm.lib;Msacm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>out\leviathan-snapshot.exe</OutputFile>
       <SuppressStartupBanner>
       </SuppressStartupBanner>
@@ -693,7 +693,6 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\4klang\4klang.h" />
     <ClInclude Include="src\debug.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Heavy Release 2|Win32'">false</ExcludedFromBuild>

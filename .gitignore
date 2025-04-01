@@ -4,6 +4,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 *out.html
 out/
+*.wav
+*.mp3
 
 # User-specific files
 *.suo

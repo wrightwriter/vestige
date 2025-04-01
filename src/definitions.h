@@ -10,12 +10,6 @@
 #include <windows.h>
 #include <GL/gl.h>
 
-#if OPENGL_DEBUG
-	#define CHECK_ERRORS() assertGlError(STRINGIFY(__LINE__))
-#else
-	#define CHECK_ERRORS() 
-#endif
-
 
 #define oglCreateFramebuffers ((PFNGLCREATEFRAMEBUFFERSPROC)wglGetProcAddress("glCreateFramebuffers"))
 #define oglNamedFramebufferDrawBuffers ((PFNGLNAMEDFRAMEBUFFERDRAWBUFFERSPROC)wglGetProcAddress("glNamedFramebufferDrawBuffers"))

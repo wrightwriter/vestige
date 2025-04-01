@@ -1,6 +1,7 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
 #define EDITOR									1
+#define EDITOR_FORCE_RELOAD_FROM_DISK			1
 #define OPENGL_DEBUG						1
 #define FULLSCREEN							0
 #define VSYNC										1
@@ -10,7 +11,8 @@
 #define XRES										1280
 #define YRES										720
 
-#define SONG_DURATION						420
+//#define SONG_DURATION						420
+#define SONG_DURATION						470
 
 #define MUSICFB									framebuffers[0]
 #define PROG_RENDER							programs[0]
@@ -69,7 +71,7 @@ static void __forceinline init_window() {
 		HINSTANCE hInstance =	GetModuleHandle(NULL);
 
     WNDCLASS wc = {};
-    wc.lpfnWndProc = WindowProc;
+    wc.lpfnWndProc = editor_winapi_window_proc;
     wc.hInstance = hInstance;
     wc.lpszClassName = WINDOW_CLASS_NAME;
     
@@ -142,7 +144,7 @@ static void __forceinline init_window() {
 	#if OPENGL_DEBUG
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-		oglDebugMessageCallback(MessageCallback, 0); 
+		oglDebugMessageCallback(dbg_gl_message_callback, 0); 
 	#endif
 
 	#if VSYNC
@@ -151,11 +153,11 @@ static void __forceinline init_window() {
 		wglSwapIntervalEXT(1);
 	#endif
 	#if EDITOR
-		CreateChildConsole();
-		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)MessageLoop, NULL, 0, NULL);
+		editor_create_console();
+		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)editor_console_winapi_message_loop, NULL, 0, NULL);
 	#endif
 
-	glDisable(GL_BLEND);
+	glDisable(GL_BLEND); // needed? bytes?
 }
 
 

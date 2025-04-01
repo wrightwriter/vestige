@@ -6,9 +6,9 @@ static void __forceinline init_shaders() {
 		programs[1] = add_program(GL_FRAGMENT_SHADER, post_frag, "src/shaders/post.frag");
 		programs[2] = add_program(GL_COMPUTE_SHADER, music_comp, "src/shaders/music.comp");
 		int _programs[] = {programs[0], programs[1], programs[2]};
-		gl_debug(_programs);
-		// gl_debug_nocheck(_programs);
-		reload_from_disk();
+		dbg_check_shader_compilation(_programs);
+		// dbg_nocheck_shader_compilation(_programs);
+		editor_reload_from_disk();
 }
 
 static void __forceinline init_resources() {
@@ -16,7 +16,7 @@ static void __forceinline init_resources() {
 
 	{
 		oglCreateBuffers(1, &ssbo);
-		oglNamedBufferStorage(ssbo,1000000 * 180,0,0); // 1 megabyte, too much
+		oglNamedBufferStorage(ssbo,1000000 * 200,0,0); // 1 megabyte, too much
 		oglBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 	}
 	// framebuffer
@@ -82,7 +82,7 @@ static void __forceinline pre_loop() {
 
 
 static void __forceinline main_loop() {
-	try_reload();
+	editor_try_reload();
 	#if EDITOR
 		audio_time = editor_time;
 	#else

@@ -113,3 +113,55 @@ static void __forceinline audio_unmute(){
 #endif
 }
 
+void audio_save_wav() {
+#if EDITOR
+    FILE* file = fopen("song.wav", "wb");
+    if (!file) {
+        MessageBox(NULL, "Error opening file!", "Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    // Define WAV header
+    struct {
+        char chunkID[4];      // "RIFF"
+        DWORD chunkSize;      // File size - 8
+        char format[4];       // "WAVE"
+        char subchunk1ID[4];  // "fmt "
+        DWORD subchunk1Size;  // 16 (PCM)
+        WORD audioFormat;     // 3 (IEEE Float PCM)
+        WORD numChannels;     // 2 (Stereo)
+        DWORD sampleRate;     // 44100 Hz
+        DWORD byteRate;       // SampleRate * NumChannels * BitsPerSample / 8
+        WORD blockAlign;      // NumChannels * BitsPerSample / 8
+        WORD bitsPerSample;   // 32-bit float
+        char subchunk2ID[4];  // "data"
+        DWORD subchunk2Size;  // NumSamples * NumChannels * BitsPerSample / 8
+    } wavHeader;
+
+    // Fill WAV header
+    memcpy(wavHeader.chunkID, "RIFF", 4);
+    memcpy(wavHeader.format, "WAVE", 4);
+    memcpy(wavHeader.subchunk1ID, "fmt ", 4);
+    memcpy(wavHeader.subchunk2ID, "data", 4);
+
+    wavHeader.subchunk1Size = 16;
+    wavHeader.audioFormat = 3;  // IEEE Float PCM
+    wavHeader.numChannels = 2;
+    wavHeader.sampleRate = SAMPLE_RATE;
+    wavHeader.bitsPerSample = 32;
+    wavHeader.blockAlign = (wavHeader.bitsPerSample / 8) * wavHeader.numChannels;
+    wavHeader.byteRate = wavHeader.sampleRate * wavHeader.blockAlign;
+    wavHeader.subchunk2Size = MAX_SAMPLES * wavHeader.blockAlign;
+    wavHeader.chunkSize = 36 + wavHeader.subchunk2Size;
+
+    // Write WAV header
+    fwrite(&wavHeader, sizeof(wavHeader), 1, file);
+
+    // Write the sound buffer
+    fwrite(lpSoundBuffer, sizeof(SAMPLE_TYPE), MAX_SAMPLES * 2, file);
+
+    fclose(file);
+    MessageBox(NULL, "WAV file saved successfully!", "Success", MB_OK);
+#endif
+}
+
