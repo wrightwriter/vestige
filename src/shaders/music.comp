@@ -162,20 +162,20 @@ void main(){
 
 		  float kits = 2. + pow(h(i + tid).x,2.5)*20.;
 		  for(float k = 0.; k < kits + min(T,0); k++){
-			float g = f;
+			float f = f;
 			float ots = 1.
 				+ smoothstep(0.,4.,tid) * 2.
 				* exp(-mod(T,1.)*1.) 
 				* smoothstep(0.,0.004,mod(t,1.));
 			
-			float ot = pow(h(i + k*1.5 + tid).x,2. +.5 * smoothstep(500.,2000.,g));
-			g *= 1. + floor(ot*ots);
+			float ot = pow(h(i + k*1.5 + tid).x,2. +.5 * smoothstep(500.,2000.,f));
+			f *= 1. + floor(ot*ots);
 			//f += (h(k + i*1.4).x - 0.5)*20.*(smoothstep(0.,30.,T) + pow(outro,95.)*1000.);
 			float env = exp(
-			  -t*(7. - 6.*smoothstep(2000.,800.,g))*0.7) 
+			  -t*(7. - 6.*smoothstep(2000.,800.,f))*0.7) 
 			  * smoothstep(replen*2.,0.,t) 
 			  * smoothstep(0.,0.002,t)
-			  * smoothstep(7000.,800.,g)
+			  * smoothstep(7000.,800.,f)
 			;
 			
 			  
@@ -183,10 +183,10 @@ void main(){
 			  
 			vec2 wave = vec2(
 			  sin(
-				tau * g * TT 
+				tau * f * TT 
 				 
 				//+sin(h(i*2.4 + tid).x*15.*TT)*4. * smoothstep(10.,20.,T) // chorus
-				//+ sin(tau * g * TT*2.)*env*env*env*0.6 * smoothstep(20.,60.,T)  // fm
+				//+ sin(tau * f * TT*2.)*env*env*env*0.6 * smoothstep(20.,60.,T)  // fm
 			  )
 			) * rot(i);
 	  
