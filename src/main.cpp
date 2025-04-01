@@ -1,7 +1,7 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
 #define EDITOR									1
-#define EDITOR_FORCE_RELOAD_FROM_DISK			1
+#define EDITOR_FORCE_RELOAD_FROM_DISK			0
 #define OPENGL_DEBUG						1
 #define FULLSCREEN							0
 #define VSYNC										1
@@ -18,6 +18,7 @@
 #define PROG_RENDER							programs[0]
 #define PROG_POST								programs[1]
 #define PROG_MUSIC							programs[2]
+
 
 
 #include "definitions.h"
@@ -39,8 +40,6 @@
 #include "debug.h"
 #include "music.h"
 #include "editor.h"
-
-
 
 
 #pragma data_seg(".screensettings")
@@ -159,6 +158,11 @@ static void __forceinline init_window() {
 
 	glDisable(GL_BLEND); // needed? bytes?
 }
+
+
+
+
+
 
 
 
