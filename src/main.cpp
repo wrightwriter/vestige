@@ -167,6 +167,8 @@ static void __forceinline init_window() {
 
 
 
+
+
 static int __forceinline add_program(unsigned int program_type, const char* str, const char* path) {
 	#if OPENGL_DEBUG
 		file_paths[shaders_count] = path;

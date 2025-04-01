@@ -4,8 +4,9 @@ import shutil
 import sys
 
 arguments_string = ' '.join(sys.argv[1:])
-arguments_string = ' --no-renaming '
-arguments_string += ' --no-inlining '
+# arguments_string = ' --no-renaming '
+# arguments_string += ' --no-inlining '
+
 
 shader_dir = r'src\shaders'
 

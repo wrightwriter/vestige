@@ -73,47 +73,46 @@ void main(){
     float TT = float(samp%repd)/44100.;
 
 
-	float genv = 1.;
 	float outro = smoothstep(430.,470.,Tt);
 
-//	if(T> 280.0){
-//		float t = mod(T, 4.);
-//		float env = exp(-t*10.);
-//		
-//		float f = 30.;
-//        s += env*sin(TT*f*tau + sin(TT*f*tau*10.) * env*0.2  )*15.;
-//
-//		//float sub = 
-//		//s += exp()
-//	}
-//
-//	float genv = 1.;
-//	if(T > 250.){
-//	//if(true){
-//		float md = 2. + sin(T)*0.0002;
-//
-//		float sc = 4.;
-//		T *= sc;
-//
-//		float id = floor(-T/md);
-//
-//		//T = fract(-T*md + h(floor(T*md)).x*100.)*0.3;
-//		float mt = mod(-T , md);
-//		T = mt + h(id).x*sc + (T/sc - 260.)*0.6;
-//		genv = 
-//			//smoothstep(0.,0.2,mod(-T , md)) 
-//			//* smoothstep(md,md - .04,mod(-T , md))
-//			smoothstep(0.,md*0.04,mt) 
-//			* smoothstep(md,md*0.98,mt)
-//			;
-//		genv *= 4.;
-//		genv *= 1.-outro;
-//		TT *= 0.25 + 0.25*float(Tt > 260.) + h(id).z*0.02*1.;
-//		//TT -= h(id).x*10.;
-//		//samp += int(h(id).x*10000.);
-//	} else {
-//		T = mix(T,0.,pow(clamp((T - 230.)*0.04,0., 1.),2.));
-//	}
+	if(T> 280.0){
+		float t = mod(T, 4.);
+		float env = exp(-t*10.);
+		
+		float f = 30.;
+        s += env*sin(TT*f*tau + sin(TT*f*tau*10.) * env*0.2  )*15.;
+
+		//float sub = 
+		//s += exp()
+	}
+
+	float genv = 1.;
+	if(T > 250.){
+	//if(true){
+		float md = 2. + sin(T)*0.0002;
+
+		float sc = 4.;
+		T *= sc;
+
+		float id = floor(-T/md);
+
+		//T = fract(-T*md + h(floor(T*md)).x*100.)*0.3;
+		float mt = mod(-T , md);
+		T = mt + h(id).x*sc + (T/sc - 260.)*0.6;
+		genv = 
+			//smoothstep(0.,0.2,mod(-T , md)) 
+			//* smoothstep(md,md - .04,mod(-T , md))
+			smoothstep(0.,md*0.04,mt) 
+			* smoothstep(md,md*0.98,mt)
+			;
+		genv *= 4.;
+		genv *= 1.-outro;
+		TT *= 0.25 + 0.25*float(Tt > 260.) + h(id).z*0.02*1.;
+		//TT -= h(id).x*10.;
+		//samp += int(h(id).x*10000.);
+	} else {
+		T = mix(T,0.,pow(clamp((T - 230.)*0.04,0., 1.),2.));
+	}
 
     
     float its = 400.;
@@ -124,6 +123,7 @@ void main(){
     //its = 10. + smoothstep(0.,1.,T)*40.;
     its = 1000.;
 
+	
 	vec2 chord = vec2(0);
 	{ // SINE CHORD
 		float its = 2425. ;
@@ -133,15 +133,15 @@ void main(){
 		  float replen = 60./140.*4. 
 			// + sin(time.z)*0.02
 		  ;
-			
+
 		  // . . . .
 		  // .
 		  float t = T;
 		  t = t - replen * floor(h(i).z *4.);
-//		  t -= replen * pow(h(i
-//			// + tid
-//		  //).y,1.2)*1.;
-//		  ).y,1.2)*(1. + 6. * smoothstep(10.,20.,T));
+		  t -= replen * pow(h(i
+			// + tid
+		  //).y,1.2)*1.;
+		  ).y,1.2)*(1. + 6. * smoothstep(10.,20.,T));
 		  float tid = floor(t/(replen*4.));
 
 		  float offsc = smoothstep(0.,4.,tid)*0.5;      
@@ -162,31 +162,29 @@ void main(){
 
 		  float kits = 2. + pow(h(i + tid).x,2.5)*20.;
 		  for(float k = 0.; k < kits + min(T,0); k++){
-			float f = f;
+			float g = f;
 			float ots = 1.
 				+ smoothstep(0.,4.,tid) * 2.
 				* exp(-mod(T,1.)*1.) 
 				* smoothstep(0.,0.004,mod(t,1.));
 			
-			float ot = pow(h(i + k*1.5 + tid).x,2. +.5 * smoothstep(500.,2000.,f));
-			f *= 1. + floor(ot*ots);
-			//f += (h(k + i*1.4).x - 0.5)*20.*(smoothstep(0.,30.,T) + pow(outro,95.)*1000.);
+			float ot = pow(h(i + k*1.5 + tid).x,2. +.5 * smoothstep(500.,2000.,g));
+			g *= 1. + floor(ot*ots);
+			g += (h(k + i*1.4).x - 0.5)*20.*(smoothstep(0.,30.,T) + pow(outro,95.)*1000.);
 			float env = exp(
-			  -t*(7. - 6.*smoothstep(2000.,800.,f))*0.7) 
+			  -t*(7. - 6.*smoothstep(2000.,800.,g))*0.7) 
 			  * smoothstep(replen*2.,0.,t) 
 			  * smoothstep(0.,0.002,t)
-			  * smoothstep(7000.,800.,f)
+			  * smoothstep(7000.,800.,g)
 			;
 			
-			  
 		  
-			  
 			vec2 wave = vec2(
 			  sin(
-				tau * f * TT 
+				tau * g * TT 
 				 
-				//+sin(h(i*2.4 + tid).x*15.*TT)*4. * smoothstep(10.,20.,T) // chorus
-				//+ sin(tau * f * TT*2.)*env*env*env*0.6 * smoothstep(20.,60.,T)  // fm
+				+sin(h(i*2.4 + tid).x*15.*TT)*4. * smoothstep(10.,20.,T) // chorus
+				+ sin(tau * g * TT*2.)*env*env*env*0.6 * smoothstep(20.,60.,T)  // fm
 			  )
 			) * rot(i);
 	  
@@ -203,176 +201,175 @@ void main(){
 		  }
 		}
 	}
-	s += chord*0.05;
-	
+	s += chord;
 
 //	hist[samp + 10000000] = s;
   //return;
   
 
-//    its = 400.;
-//
-//    for(float i = 0.; ++i < its;){ // ---- LEAD
-//        float t = T - pow(smoothstep(0.,1.,hash3f(vec3(i)).x),1.2)*(0.2 + 3. * hash3f(vec3(i)).y);
-//        
-//        if(i < 2.){
-//            t = T;
-//        }
-//
-//
-//		float[4] notes = float[](
-//			notes[0],
-//			notes[1],
-//			notes[2],
-//			notes[3]
-//		);
-//
-//		if(mod(t,8) < 1.){
-//			for(int i = 0; i < 4; i++){
-//				notes[i] += 7;
-//			}
-//		}
-//
-//
-//        
-//        //float t = 
-//        float repd = 0.5 + sin(t*0.5)*2./t * smoothstep(10.,20.,T);
-//
-//        repd = mix(10.,repd,smoothstep(0.,60.,T)) ;
-//        
-//        float tid = floor(t/repd);
-//        float tt = mod(t,repd);
-//        float n = notes[int(mod(tid,4.))] - 12. * float(hash3f(vec3(tid)).x < 0.2)
-//             + 12. * float(hash3f(vec3(tid)).z < 0.2);
-//
-//		n += 12. * float(t > 60.);
-//		n -= 12.;
-//		n -= 12.;
-//        float f = ntf(
-//            n
-//        );
-//        
-//        
-//        f -= 12. * float(hash3f(vec3(tid)).x < 0.2);
-//        
-//        float env = smoothstep(0.,0.004,tt) * exp(-tt*10.);
-//		float vol = 6.;
-//        float fmamt = 2. + 10.*smoothstep(60.,100.,T);
-//        float fmwave = env * env * sin(TT*f*tau) * fmamt;
-//        if(i < 2.){
-//            s += env*sin(TT*f*tau + fmwave )*0.3*vol;
-//        } else {
-//            float q = tt*0.0;
-//            s += (7.*env*sin((TT)*f*tau  + fmwave + cyclic(vec3(vec2(sin(q),cos(q)),i), 1., 1.).xy*30.))/its*vol;
-//        }
-//        //s += env*sin((t)*f*tau );
-//    
-//     //cyclic(vec3 p, float pers, float lacu) 
-//    }
-//    
-//    
-//    
-//    //s /= its;
-//    s *= 0.14;
-//    
-//    its = 44. - 10.*smoothstep(30.,50.,T);
-//    
-//    for(int n = 0; n < 4; n++){ // ---- choir
-//    for(float i = 0.; ++i < its;){
-//        float t = T;
-//        float f = ntf(
-//            notes[n] 
-//            + 12. * float(hash3f(vec3(i)).z < 0.1)
-//            + 12. * float(hash3f(vec3(i)*100.).x < 0.1)
-//            - 12. * float(hash3f(vec3(i)).x < 0.5)
-//            - 12. 
-//            //+ 12. * clamp((t - 0.5)*0.1,0.,1.)
-//            )
-//            //+ 12. * float(hash3f(vec3(i)).z < 0.1)
-//            //- 12. * float(hash3f(vec3(i)).y < 0.5)
-//                
-//        ;
-//        
-//        //f -= hash3f(vec3(i)*2.).z*211. * pow(smoothstep(50.,20.,t),60.);
-//		//f -= 12.;
-//        f += 12. * float(hash3f(vec3(i)).z < 0.1);
-//		f -= hash3f(vec3(i)*4.).x * smoothstep(120.,144.,T)*100.;
-//        
-//
-//		if(Tt > 340){
-//			t = TT*2.0;
-//			//ss -= ss;
-//			//ss += sin(t*f*tau);
-//		}
-//        t *= tau * f;
-//        //t += sin(i*4. + float(n) + T*0.3)*14.;
-//
-//
-//        
-//        vec2 ss = cyclic(
-//            //vec3(vec2(sin(t),cos(t)),i*0.1 + float(n))
-//            vec3(fract(t/tau)) * vec3(2.0, -3.0, -8.0)
-//            , 
-//            0.5, 
-//            0.4
-//        ).xy * rot(i*0.2 );
-//        ss -= cyclic(
-//            vec3(vec2(sin(t),cos(t)),i*0.1 + float(n))
-//            //vec3(fract(t/tau)) * vec3(2.0, -3.0, -8.0)
-//            , 
-//            0.5, 
-//            0. + smoothstep(120.,144.,T)*2.
-//        ).xy * rot(-i*.5 );
-//
-//        
-//        s += ss /its*0.15*smoothstep(60.,100.,T);
-//    }
-//    }
-//    
-//    vec2 qq = vec2(0);
-//    its = 4.;
-//    for(float i = 0.; ++i < its;){ // --------- BASS
-//        //float t = T - pow(smoothstep(0.,1.,hash3f(vec3(i)).x),1.2)*(0.2 + 3. * hash3f(vec3(i)).y);
-//        float t = T;
-//
-//
-//        float repd = 0.5 + sin(t*0.5)*2./t;
-//        
-//        float tid = floor(t/repd);
-//        float tt = mod(t,repd);
-//        //float n = notes[int(mod(tid,4.))] - 24. - 12. - 12.;
-//        float n = notes[0] - 12. - 12. - 12.;
-//        float f = ntf(n);
-//        
-//        
-//        //f -= 12. * float(hash3f(vec3(tid)).x < 0.2);
-//        
-//
-//			
-////+ .5*smoothstep(140.,150.,T)
-//		float end = smoothstep(160.,180.,T);
-//        float env = smoothstep(0.,0.04,tt) 
-//			* exp(-tt*(20. - 15. * end)) 
-//			* smoothstep(repd,0.,tt);
-//
-//
-//		
-//        float fmamt = 1. - 0.9 * end;
-//        float fmwave = env * env * sin(TT*(f*(1. + end*10. * floor(h(tid).x*10.)))*tau*1.) * fmamt;
-//        
-//		env *= smoothstep(100.,110.,T);
-//
-//		if(T > 60 && T < 70.){
-//			env = exp(-(T-60.))*4.;
-//		}
-//		if(T > 80 && t < 100.){
-//			env = exp(-mod(T,4.))*0.4;
-//		}
-//		env *= 1. + .0*smoothstep(140.,150.,T);
-//        qq += env*sin(TT*f*tau + fmwave )/its*3.;
-//    }
-//    //qq /= its;
-//    s += qq;
+    its = 400.;
+
+    for(float i = 0.; ++i < its;){ // ---- LEAD
+        float t = T - pow(smoothstep(0.,1.,hash3f(vec3(i)).x),1.2)*(0.2 + 3. * hash3f(vec3(i)).y);
+        
+        if(i < 2.){
+            t = T;
+        }
+
+
+		float[4] notes = float[](
+			notes[0],
+			notes[1],
+			notes[2],
+			notes[3]
+		);
+
+		if(mod(t,8) < 1.){
+			for(int i = 0; i < 4; i++){
+				notes[i] += 7;
+			}
+		}
+
+
+        
+        //float t = 
+        float repd = 0.5 + sin(t*0.5)*2./t * smoothstep(10.,20.,T);
+
+        repd = mix(10.,repd,smoothstep(0.,60.,T)) ;
+        
+        float tid = floor(t/repd);
+        float tt = mod(t,repd);
+        float n = notes[int(mod(tid,4.))] - 12. * float(hash3f(vec3(tid)).x < 0.2)
+             + 12. * float(hash3f(vec3(tid)).z < 0.2);
+
+		n += 12. * float(t > 60.);
+		n -= 12.;
+		n -= 12.;
+        float f = ntf(
+            n
+        );
+        
+        
+        f -= 12. * float(hash3f(vec3(tid)).x < 0.2);
+        
+        float env = smoothstep(0.,0.004,tt) * exp(-tt*10.);
+		float vol = 6.;
+        float fmamt = 2. + 10.*smoothstep(60.,100.,T);
+        float fmwave = env * env * sin(TT*f*tau) * fmamt;
+        if(i < 2.){
+            s += env*sin(TT*f*tau + fmwave )*0.3*vol;
+        } else {
+            float q = tt*0.0;
+            s += (7.*env*sin((TT)*f*tau  + fmwave + cyclic(vec3(vec2(sin(q),cos(q)),i), 1., 1.).xy*30.))/its*vol;
+        }
+        //s += env*sin((t)*f*tau );
+    
+     //cyclic(vec3 p, float pers, float lacu) 
+    }
+    
+    
+    
+    //s /= its;
+    s *= 0.14;
+    
+    its = 44. - 10.*smoothstep(30.,50.,T);
+    
+    for(int n = 0; n < 4; n++){ // ---- choir
+    for(float i = 0.; ++i < its;){
+        float t = T;
+        float f = ntf(
+            notes[n] 
+            + 12. * float(hash3f(vec3(i)).z < 0.1)
+            + 12. * float(hash3f(vec3(i)*100.).x < 0.1)
+            - 12. * float(hash3f(vec3(i)).x < 0.5)
+            - 12. 
+            //+ 12. * clamp((t - 0.5)*0.1,0.,1.)
+            )
+            //+ 12. * float(hash3f(vec3(i)).z < 0.1)
+            //- 12. * float(hash3f(vec3(i)).y < 0.5)
+                
+        ;
+        
+        //f -= hash3f(vec3(i)*2.).z*211. * pow(smoothstep(50.,20.,t),60.);
+		//f -= 12.;
+        f += 12. * float(hash3f(vec3(i)).z < 0.1);
+		f -= hash3f(vec3(i)*4.).x * smoothstep(120.,144.,T)*100.;
+        
+
+		if(Tt > 340){
+			t = TT*2.0;
+			//ss -= ss;
+			//ss += sin(t*f*tau);
+		}
+        t *= tau * f;
+        //t += sin(i*4. + float(n) + T*0.3)*14.;
+
+
+        
+        vec2 ss = cyclic(
+            //vec3(vec2(sin(t),cos(t)),i*0.1 + float(n))
+            vec3(fract(t/tau)) * vec3(2.0, -3.0, -8.0)
+            , 
+            0.5, 
+            0.4
+        ).xy * rot(i*0.2 );
+        ss -= cyclic(
+            vec3(vec2(sin(t),cos(t)),i*0.1 + float(n))
+            //vec3(fract(t/tau)) * vec3(2.0, -3.0, -8.0)
+            , 
+            0.5, 
+            0. + smoothstep(120.,144.,T)*2.
+        ).xy * rot(-i*.5 );
+
+        
+        s += ss /its*0.15*smoothstep(60.,100.,T);
+    }
+    }
+    
+    vec2 qq = vec2(0);
+    its = 4.;
+    for(float i = 0.; ++i < its;){ // --------- BASS
+        //float t = T - pow(smoothstep(0.,1.,hash3f(vec3(i)).x),1.2)*(0.2 + 3. * hash3f(vec3(i)).y);
+        float t = T;
+
+
+        float repd = 0.5 + sin(t*0.5)*2./t;
+        
+        float tid = floor(t/repd);
+        float tt = mod(t,repd);
+        //float n = notes[int(mod(tid,4.))] - 24. - 12. - 12.;
+        float n = notes[0] - 12. - 12. - 12.;
+        float f = ntf(n);
+        
+        
+        //f -= 12. * float(hash3f(vec3(tid)).x < 0.2);
+        
+
+			
+//+ .5*smoothstep(140.,150.,T)
+		float end = smoothstep(160.,180.,T);
+        float env = smoothstep(0.,0.04,tt) 
+			* exp(-tt*(20. - 15. * end)) 
+			* smoothstep(repd,0.,tt);
+
+
+		
+        float fmamt = 1. - 0.9 * end;
+        float fmwave = env * env * sin(TT*(f*(1. + end*10. * floor(h(tid).x*10.)))*tau*1.) * fmamt;
+        
+		env *= smoothstep(100.,110.,T);
+
+		if(T > 60 && T < 70.){
+			env = exp(-(T-60.))*4.;
+		}
+		if(T > 80 && t < 100.){
+			env = exp(-mod(T,4.))*0.4;
+		}
+		env *= 1. + .0*smoothstep(140.,150.,T);
+        qq += env*sin(TT*f*tau + fmwave )/its*3.;
+    }
+    //qq /= its;
+    s += qq;
 
     
 	s = tanh(s*1.2);
