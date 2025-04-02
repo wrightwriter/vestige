@@ -83,7 +83,7 @@ static void audio_render() {
 			oglDispatchCompute(group_disp_batch_cnt, 1, 1);
 			float* cpu_write_ptr = &lpSoundBuffer[0];
 			//cpu_write_ptr += group_disp_idx * local_thread_cnt * 2;
-			glFlush();
+			//glFlush();
 			glFinish();
 		}
 		//oglGetNamedBufferSubData(ssbo, gpu_buff_start_offs_bytes, total_byte_count, &lpSoundBuffer);

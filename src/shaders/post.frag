@@ -21,9 +21,9 @@ uint hash_u(uint _a) {
 
 float hash_f_s(float s){ return ( float( hash_u(uint(s)) ) / float( -1u ) ); }
 float hash_f(){ uint s = hash_u(seed); seed = s;return ( float( s ) / float( -1u ) ); }
-vec2 hash_v2(){ return vec2(hash_f(), hash_f()); }
-vec3 hash_v3_s(float s){ return vec3(hash_f_s(s), hash_f_s(s), hash_f_s(s)); }
-vec3 hash_v3(){ return vec3(hash_f(), hash_f(), hash_f()); }
+//vec2 hash_v2(){ return vec2(hash_f(), hash_f()); }
+//vec3 hash_v3_s(float s){ return vec3(hash_f_s(s), hash_f_s(s), hash_f_s(s)); }
+//vec3 hash_v3(){ return vec3(hash_f(), hash_f(), hash_f()); }
 
 uint get_hist_id(ivec2 c){
 	return (c.x + uint(R.x) * c.y + uint(R.x*R.y))%uint(R.x*R.y);
@@ -131,9 +131,6 @@ float draw_char(inout vec2 p, inout float sd, int char_idx, int char_cnt){
 
 void main( ){
 	vec2 uv = gl_FragCoord.xy/R.xy;
-
-	seed = uint(gl_FragCoord.x +gl_FragCoord.y*1111);
-	hash_f();
 	//seed = uint(gl_FragCoord.x +gl_FragCoord.y*5214.);
 
 	float end = smoothstep(250.,250.1,T);
@@ -145,7 +142,8 @@ void main( ){
 	//eenv = 1.;
 
 	float K_COL = 0.03
-		+ 0.1* smoothstep(90.,190.,T)
+		+ 0.05* smoothstep(90.,190.,T)
+		//+ 0.1* smoothstep(90.,190.,T)
 		- end + 4.*endb * smoothstep(4.,0.,mod(T,4.));
 	;
 	float K_GLITCH = 0.;
@@ -156,6 +154,8 @@ void main( ){
 	K_GLITCH *= 1.-end + endb;
 
 
+	seed = uint(gl_FragCoord.x +gl_FragCoord.y*1111);
+	hash_f();
 
 	if(T > 80 && T < 100.){
 		//float env = exp(-mod(T,4.));
@@ -171,10 +171,9 @@ void main( ){
 	vec3 pal = mix_cols(col.x*115.*4.);
 	col = col/(1.+col);
 	if(hash_f_s(floor(T*0.8))<0.7){
-	//if(true){
 		col = 1.- col;
 	} else {
-		col = pow(step(col,vec3(.5)),vec3(0.02));
+		col = pow(step(col,vec3(.5)),vec3(0.02)); // MINIFY
 		col = pow(abs(col),vec3(0.02));
 	}
 
@@ -192,7 +191,7 @@ void main( ){
 
 	//col = mix(col, hash_v3(), smoothstep(460.,461.,T));
 
-	C = vec4(pow(abs(col), vec3(2./0.45454545)),1);
+	C = vec4(pow(abs(col), vec3(2./0.45)),1);
 
 
 	if(T > 460.){
@@ -204,7 +203,7 @@ void main( ){
 	} else {
 		if (col.x < 0.0 + K_GLITCH){
 			ivec2 offs = -ivec2(0, 4);
-			//seed += iFrame;
+			seed += F; // ???????
 			offs *= ((int(hash_f() < col.x*1111.))*2 - 1)*(1 + 5*int(hash_f_s(floor(T))));
 			offs *= int(hash_f_s(floor(T) * 124.)*2.)*2 - 1;
 			offs *= 1 + int(endb * smoothstep(3.,0.,mod(T,4.))*20.);

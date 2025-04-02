@@ -531,9 +531,9 @@ static void __forceinline do_editor_stuff(){
 
 	// --- Update titlebar
 	{
-		char buffer[50];
+		char buffer[650];
 		//editor_average_ms
-    sprintf(buffer, "%.2fs ------- %.2fms ------- %.2fps                 loop: %.2 - %.2 ", editor_time, editor_average_ms, 1000./editor_average_ms, editor_loop_start, editor_loop_end);
+    sprintf(buffer, "%.2fs ------- %.2fms ------- %.2fps                 loop: %.2f - %.2f ", editor_time, editor_average_ms, 1000./editor_average_ms, editor_loop_start, editor_loop_end);
 		SetWindowText(hwnd, buffer);
 		SetWindowText(hwndConsole, buffer);
 	}

@@ -1,14 +1,14 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
-#define EDITOR												1
+#define EDITOR												0
 #define EDITOR_FORCE_RELOAD_FROM_DISK	0
 #define VALIDATE_SHADERS_GLSLANG			0
-#define OPENGL_DEBUG									1
+#define OPENGL_DEBUG									0
 
 #define ANTI_TDR											1
 #define LAPTOP_GPU_FIX								0
 
-#define FULLSCREEN										0
+#define FULLSCREEN										1
 #define AUTORES												0
 #define VSYNC													1
 
@@ -41,11 +41,11 @@ extern "C" {
 #pragma data_seg(".pids")
 	static int frame = 1;
 	static float audio_time;
-	static int programs[4];
+	static int programs[3];
 	static HDC hDC;
 	static GLuint ssbo;
-	static GLuint textures[6];
-	static GLuint framebuffers[6];
+	//static GLuint textures[6];
+	//static GLuint framebuffers[6];
 	static int xres;
 	static int yres;
 
@@ -188,7 +188,7 @@ static void __forceinline init_window() {
 
 			//}
 		#else
-			hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE, 0, 0, xres, yres, 0, 0, 0, 0));
+			hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUPWINDOW | WS_VISIBLE, 0, 0, xres, yres, 0, 0, 0, 0));
 		#endif
 		//hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE | WS_MAXIMIZE, 0, 0, 0, 0, 0, 0, 0, 0));
 	#else
@@ -232,7 +232,7 @@ static void __forceinline init_window() {
 		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)editor_console_winapi_message_loop, NULL, 0, NULL);
 	#endif
 
-	glDisable(GL_BLEND); // needed? bytes?
+	//glDisable(GL_BLEND); // needed? bytes?
 }
 
 
@@ -298,7 +298,7 @@ void entrypoint(void) {
 	#if OPENGL_DEBUG || EDITOR
 		true
 	#else
-		!GetAsyncKeyState(VK_ESCAPE) || audio_time > SONG_DURATION
+		!GetAsyncKeyState(VK_ESCAPE) || audio_time > SONG_DURATION - 0.5
 	#endif
 	);
 

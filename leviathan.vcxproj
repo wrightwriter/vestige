@@ -490,7 +490,7 @@
       <LinkLibraryDependencies>false</LinkLibraryDependencies>
     </ProjectReference>
     <PreBuildEvent>
-      <Command>python "minify_shaders.py" "--aggressive-inlining"</Command>
+      <Command>python "minify_shaders.py"</Command>
       <Message>Minify user-supplied shader files.</Message>
     </PreBuildEvent>
   </ItemDefinitionGroup>
