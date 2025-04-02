@@ -226,6 +226,7 @@ void editor_do_fps_counter(){
 
 static void _inline editor_reload_from_disk() {
 	#if EDITOR
+	editor_start_timer();
 	bool prev_shader_failed_compile = shader_failed_compile;
 	shader_failed_compile = false;
 
@@ -298,6 +299,7 @@ static void _inline editor_reload_from_disk() {
 
 	}
 
+	bool a_shader_reloaded = false;
 	for(int i = 0; i < shaders_count; i++){
 		if(reload_shader[i] == false){
 			continue;
@@ -328,6 +330,7 @@ static void _inline editor_reload_from_disk() {
 
 	for(int i = 0; i < shaders_count; i++) {
 		if(reload_shader[i]){
+			a_shader_reloaded = true;
 			if(!reload_shader_success[i]){
 				oglDeleteProgram(temp_pids[i]);
 			} else {
@@ -349,6 +352,12 @@ static void _inline editor_reload_from_disk() {
 				#endif
 			}
 		}
+	}
+
+	if(a_shader_reloaded && !shader_failed_compile){
+		//char char_buff[100];
+		//sprintf("%f.2ms\n")
+		editor_end_timer(" - shader compilation");
 	}
 
 	if(prev_shader_failed_compile == true && shader_failed_compile == false){
@@ -462,6 +471,14 @@ static void __forceinline do_editor_stuff(){
     int winWidth = rect.right - rect.left;
     int winHeight = rect.bottom - rect.top;
 
+
+		#if FULLSCREEN
+			winWidth = xres;
+			winHeight = yres;
+		#else
+
+		#endif
+
     mouse_x_ndc = (2.0f * cursorPos.x) / winWidth - 1.0f;
     mouse_y_ndc = 1.0f - (2.0f * cursorPos.y) / winHeight;
 	}
@@ -473,7 +490,9 @@ static void __forceinline do_editor_stuff(){
 	 	RECT rect;
 	 	GetWindowRect(hwnd, &rect);
 
-	 	SetWindowPos(hwndConsole, HWND_TOP, rect.left, rect.bottom, rect.right - rect.left, 300, SWP_NOACTIVATE | SWP_NOSIZE | SWP_SHOWWINDOW);
+		#if !FULLSCREEN
+			SetWindowPos(hwndConsole, HWND_TOP, rect.left, rect.bottom, rect.right - rect.left, 300, SWP_NOACTIVATE | SWP_NOSIZE | SWP_SHOWWINDOW);
+		#endif
 	}
 
 	if(key_l_down){
@@ -514,8 +533,9 @@ static void __forceinline do_editor_stuff(){
 	{
 		char buffer[50];
 		//editor_average_ms
-    sprintf(buffer, "%.2fs ------- %.2fms ------- %.2fps", editor_time, editor_average_ms, 1000./editor_average_ms);
+    sprintf(buffer, "%.2fs ------- %.2fms ------- %.2fps                 loop: %.2 - %.2 ", editor_time, editor_average_ms, 1000./editor_average_ms, editor_loop_start, editor_loop_end);
 		SetWindowText(hwnd, buffer);
+		SetWindowText(hwndConsole, buffer);
 	}
 
 
@@ -548,8 +568,19 @@ static void __forceinline do_editor_stuff(){
 
 	// --- Seek
 	{
-		if((GetAsyncKeyState(VK_LBUTTON) & 0x8000) && win_focused){
-			double target_time = SONG_DURATION * (mouse_x_ndc + 1) / 2;
+		bool is_mouse_seeking = (GetAsyncKeyState(VK_LBUTTON) & 0x8000);
+		bool is_kbd_seeking = key_left_down || key_right_down;
+		bool should_seek = is_kbd_seeking || is_mouse_seeking;
+		if(should_seek && win_focused){
+			double target_time;
+			if(is_mouse_seeking){
+				target_time = SONG_DURATION * (mouse_x_ndc + 1) / 2;
+			} else if (is_kbd_seeking){
+				float seek_amt_s = 10.;
+				target_time += float(key_right_down) * seek_amt_s;
+				target_time -= float(key_left_down) * seek_amt_s;
+			}
+
 			if(target_time < 0){
 				target_time = 0;
 			}

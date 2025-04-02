@@ -1,14 +1,17 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
-#define EDITOR									1
-#define EDITOR_FORCE_RELOAD_FROM_DISK			0
-#define VALIDATE_SHADERS_GLSLANG				0
-#define OPENGL_DEBUG							0
-#define FULLSCREEN								0
-#define VSYNC									1
-#define AUTORES									0
-#define ANTI_TDR								1
-#define LAPTOP_GPU_FIX								1
+#define EDITOR												1
+#define EDITOR_FORCE_RELOAD_FROM_DISK	0
+#define VALIDATE_SHADERS_GLSLANG			0
+#define OPENGL_DEBUG									1
+
+#define ANTI_TDR											1
+#define LAPTOP_GPU_FIX								0
+
+#define FULLSCREEN										0
+#define AUTORES												0
+#define VSYNC													1
+
 
 #if LAPTOP_GPU_FIX
 extern "C" {
@@ -36,13 +39,13 @@ extern "C" {
 #include "shaders/all_shaders.h"
 
 #pragma data_seg(".pids")
-	static int frame = 1; // ulong? needed?
+	static int frame = 1;
 	static float audio_time;
 	static int programs[4];
 	static HDC hDC;
 	static GLuint ssbo;
-	//static GLuint textures[6];
-	//static GLuint framebuffers[6];
+	static GLuint textures[6];
+	static GLuint framebuffers[6];
 	static int xres;
 	static int yres;
 
@@ -123,15 +126,70 @@ static void __forceinline init_window() {
 
 	#if FULLSCREEN
 		//SetProcessDPIAware();
-		//auto disp_settings = ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
 		auto disp_settings = ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
 		//if(DISP_CHANGE_SUCCESSFUL != disp_settings){
 //DISP_CHANGE_SUCCESSFUL
 		// if(disp_settings == -2){
 		// 	MessageBox(NULL, "error", "error", 0x00000000L);
 		// }
-		ShowCursor(0);
-		hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE | WS_MAXIMIZE, 0, 0, xres, yres, 0, 0, 0, 0));
+		//ShowCursor(0);
+		//hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE | WS_MAXIMIZE, 0, 0, xres, yres, 0, 0, 0, 0));
+
+		#if EDITOR
+		//int titleBarHeight = GetSystemMetrics(SM_CYCAPTION);
+		//int borderHeight = GetSystemMetrics(SM_CYFRAME) * 1;  // Multiply by 2 for top and bottom borders
+		//int totalNonClientHeight = titleBarHeight + borderHeight;
+		//
+		//// Adjust for window borders and title bar
+		//RECT adjustedRect = { 0, 0, xres, yres };
+		//AdjustWindowRect(&adjustedRect, WS_OVERLAPPEDWINDOW, FALSE);
+		//
+		//int windowWidth = adjustedRect.right - adjustedRect.left;
+		//int windowHeight = adjustedRect.bottom - adjustedRect.top;
+		
+		//int titleBarHeight = GetSystemMetrics(SM_CYCAPTION);
+		//int borderHeight = GetSystemMetrics(SM_CYFRAME) * 2; // Top & bottom
+		//int borderWidth = GetSystemMetrics(SM_CXFRAME) * 2;  // Left & right
+
+		//// Adjust for window borders and title bar
+		//RECT adjustedRect = { 0, 0, xres, yres };
+		//AdjustWindowRect(&adjustedRect, WS_OVERLAPPEDWINDOW, FALSE);
+
+		//// Get total window size including non-client areas
+		//int windowWidth = adjustedRect.right - adjustedRect.left;
+		//int windowHeight = adjustedRect.bottom - adjustedRect.top;
+
+
+
+			hDC = GetDC(hwnd = CreateWindow(
+				//WINDOW_CLASS_NAME, 0, WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, -totalNonClientHeight, 
+				//WINDOW_CLASS_NAME, 0, WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 
+				//WINDOW_CLASS_NAME, 0, WS_POPUP | WS_VISIBLE, 0, 0, 
+				WINDOW_CLASS_NAME, 0, WS_POPUPWINDOW | WS_VISIBLE, 0, 0, 
+				//xres, yres + totalNonClientHeight, 
+				xres, yres,
+				0, 0, 0, 0
+			));
+//			LONG style = GetWindowLong(hwnd, GWL_STYLE);
+//style &= ~WS_CAPTION;  // Removes the title bar
+//SetWindowLong(hwnd, GWL_STYLE, style);
+//SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_FRAMECHANGED);
+
+			//hDC = GetDC(CreateWindow(WINDOW_CLASS_NAME, 0, WS_POPUP | WS_VISIBLE, 0, 0, xres, yres, 0, 0, 0, 0));
+			//SetWindowPos(hwnd, HWND_TOP, 0, -20, screenWidth, screenHeight, SWP_NOZORDER);
+			//LONG style = GetWindowLong(hwnd, GWL_STYLE);
+			//style &= ~WS_OVERLAPPEDWINDOW;  // Removes the title bar, borders, and maximize/minimize buttons
+			//SetWindowLong(hwnd, GWL_STYLE, style);
+
+			//style |= WS_POPUP; // Use WS_POPUP to make it borderless
+			// Add the title bar (and border)
+			//style |= WS_OVERLAPPEDWINDOW;
+			// Remove the title bar and border
+
+			//}
+		#else
+			hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE, 0, 0, xres, yres, 0, 0, 0, 0));
+		#endif
 		//hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE | WS_MAXIMIZE, 0, 0, 0, 0, 0, 0, 0, 0));
 	#else
 		hDC = GetDC(
@@ -139,7 +197,10 @@ static void __forceinline init_window() {
 				hwnd = 
 			#endif
 			#if EDITOR
-				CreateWindow( WINDOW_CLASS_NAME , 0, WS_OVERLAPPEDWINDOW | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
+				CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2 + 600, windowY - yres/2 - 100, xres, yres, 0, 0, hInstance, 0)
+				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
+				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
+				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_BORDER | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
 			#else
 				CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE, 0, 0, xres, yres, 0, 0, 0, 0)
 			#endif
@@ -148,6 +209,12 @@ static void __forceinline init_window() {
 
 	SetPixelFormat(hDC, ChoosePixelFormat(hDC, &pfd), &pfd);
 	wglMakeCurrent(hDC, wglCreateContext(hDC));
+
+	//SetWindowPos(hwnd, HWND_TOPMOST,0, -titleBarHeight - 200, windowWidth + 100, windowHeight + 100, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE);
+
+	//auto disp_settings = ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
+	//SWP_NOMOVE
+	//SetWindowPos(hwnd, HWND_TOP,0, -titleBarHeight - 200, windowWidth + 400, windowHeight + 400, SWP_NOMOVE | SWP_NOSIZE);
 
 	#if OPENGL_DEBUG
 		glEnable(GL_DEBUG_OUTPUT);
@@ -210,6 +277,8 @@ void entrypoint(void) {
 
 
 	audio_init();
+
+	audio_seek(85);
 
 	do {
 	#if EDITOR

@@ -9,7 +9,7 @@ static void __forceinline init_shaders() {
 		dbg_check_shader_compilation(_programs);
 		dbg_validate_shaders();
 		// dbg_nocheck_shader_compilation(_programs);
-		editor_reload_from_disk();
+		//editor_reload_from_disk();
 }
 
 static void __forceinline init_resources() {
@@ -23,39 +23,22 @@ static void __forceinline init_resources() {
 		oglNamedBufferStorage(ssbo, 292144000,0,0); // 
 		oglBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 	}
-	// framebuffer
 
+	//// framebuffer
 	//for(int i = 0; i < 4; i++) {
 	//	glGenTextures(1, &textures[i] );
 	//	glBindTexture(GL_TEXTURE_2D, textures[i] );
-
 	//	GLint internal_format;
-
-	//	bool create_fb = false;
-	//	if(i == 1 || i == 2 || i == 3){
-	//		glTexImage2D(GL_TEXTURE_2D, 0, internal_format = GL_R32UI, XRES, YRES, 0, GL_RED_INTEGER, GL_UNSIGNED_INT, 0);
-	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	//	}else {
-	//		create_fb = true;
-
-	//	//glReadPixels(0, 0, MUSICRESX, MUSICRESY, GL_LUMINANCE_ALPHA, GL_FLOAT, &lpSoundBuffer);
-	//		glTexImage2D(GL_TEXTURE_2D, 0, internal_format = GL_RGBA32F, MUSICRESX, MUSICRESY, 0, GL_LUMINANCE_ALPHA, GL_FLOAT, 0);
-
-	//		// parameters
-	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	//		// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-	//	}
-
+	//	glTexImage2D(GL_TEXTURE_2D, 0, internal_format = GL_RGBA32F, MUSICRESX, MUSICRESY, 0, GL_RGBA, GL_FLOAT, 0);
+	//	// parameters
+	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	//	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-
-
-	//	if(create_fb){
+	//	{
 	//		oglCreateFramebuffers(1, &framebuffers[i]);
 	//		//oglBindFramebuffer(GL_FRAMEBUFFER)
 	//		oglNamedFramebufferTexture(
@@ -64,17 +47,11 @@ static void __forceinline init_resources() {
 	//			textures[i],
 	//			0
 	//		);
-	//		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureMusic[1], 0);
-
-	//		// PFNGLNAMEDFRAMEBUFFERDRAWBUFFERPROC
 	//		const GLenum attachments[] = { GL_COLOR_ATTACHMENT0 };
-	//		// oglDrawBuffers(1, attachments);
 	//		oglNamedFramebufferDrawBuffers(framebuffers[i], 1, attachments);
 	//	}
 	//	oglBindTextureUnit(i + 1, textures[i]);
 	//	oglBindImageTexture(i + 1, textures[i], 0, 0, 0, GL_READ_WRITE, internal_format );
-	//	
-	//	// oglNamedFramebufferDrawBuffer(framebuffers[i], )
 	//}
 }
 
@@ -94,8 +71,9 @@ static void __forceinline main_loop() {
 		audio_time = audio_get_time_seconds();
 	#endif
 
-
 	//glViewport(0,0,XRES, YRES);
+	//glViewport(0,0,xres, yres);
+	//glViewport(0,0,1280, 720);
 	{
 		oglUseProgram(PROG_RENDER);
 		//oglUniform1i(0, frame);
@@ -106,7 +84,8 @@ static void __forceinline main_loop() {
 	}
 	{
 		//glViewport(xres / 2 - xres_sketch/2,0,xres_sketch, yres_sketch);
-		oglBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//oglBindFramebuffer(GL_FRAMEBUFFER, 0);
+		//oglBindFramebuffer(GL_FRAMEBUFFER, framebuffers[0]);
 		// glDrawBuffer(GL_BACK);
 
 		oglUseProgram(PROG_POST);
@@ -116,4 +95,19 @@ static void __forceinline main_loop() {
 		glRects(-1, -1, 1, 1);
 	}
 
+	
+	//((PFNGLBLITNAMEDFRAMEBUFFERPROC)wglGetProcAddress( "glBlitNamedFramebuffer"))(
+	//	0, framebuffers[0], 0, 0,
+	//	1280, 720, 
+	//	0,0,
+	//	1920, 1080, 
+	//	GL_COLOR_BUFFER_BIT, GL_LINEAR
+	//);
+	//((PFNGLBLITNAMEDFRAMEBUFFERPROC)wglGetProcAddress( "glBlitNamedFramebuffer"))(
+	//	framebuffers[0], 0, 0, 0,
+	//	1920, 1080, 
+	//	0,0,
+	//	1920, 1080, 
+	//	GL_COLOR_BUFFER_BIT, GL_LINEAR
+	//);
 }

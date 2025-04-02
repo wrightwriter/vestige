@@ -81,7 +81,7 @@ dbg_gl_message_callback(GLenum source,
 	//if (severity == GL_DEBUG_SEVERITY_NOTIFICATION || severity == 37191) // 37191 is buffer leaking to cpu mem warning.
 	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION || severity == 33387 || severity == 37191) // 37191 is buffer leaking to cpu mem warning.
 		return;
-	//MessageBox(NULL, message, message, 0x00000000L);
+	MessageBox(NULL, message, message, 0x00000000L);
 
 	//fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
 	//	(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),

@@ -136,16 +136,23 @@ void main(){
     //its = 10. + smoothstep(0.,1.,T)*40.;
     its = 1000.;
 
+	vec2 outro_mw = 
+		-pow(outro,35.) * (
+			cyclic(0.2*vec3(vec2(sin(T),cos(T)),10.*T), 0.2, 0.3).xy*30.*40.
+
+		);
+	outro_mw -= outro_mw;
 	
 	vec2 chord = vec2(0);
 	{ // SINE CHORD
 		float its = 2425. ;
 		float[7] scale = float[](0., 1., 3., 5., 7., 8., 10.);
-		for(float i = 10.; i++ < its  + 10. + min(T,0);){
+		for(float i = 10.; i++ < its  + 10.;){
 		  //float replen = 1.0/4.0*4.0
 		  float replen = 60./140.*4. 
 			// + sin(time.z)*0.02
 		  ;
+
 
 		  // . . . .
 		  // .
@@ -174,7 +181,7 @@ void main(){
 		  );
 
 		  float kits = 2. + pow(h(i + tid).x,2.5)*20.;
-		  for(float k = 0.; k < kits + min(T,0); k++){
+		  for(float k = 0.; k < kits; k++){
 			float g = f;
 			float ots = 1.
 				+ smoothstep(0.,4.,tid) * 2.
@@ -183,7 +190,7 @@ void main(){
 			
 			float ot = pow(h(i + k*1.5 + tid).x,2. +.5 * smoothstep(500.,2000.,g));
 			g *= 1. + floor(ot*ots);
-			g += (h(k + i*1.4).x - 0.5)*20.*(smoothstep(0.,30.,T) - pow(outro,65.)*35.);
+			g += (h(k + i*1.4).x - 0.5)*20.*(smoothstep(0.,30.,T));
 			float env = exp(
 			  -t*(7. - 6.*smoothstep(2000.,800.,g))*0.7) 
 			  * smoothstep(replen*2.,0.,t) 
@@ -195,9 +202,12 @@ void main(){
 			vec2 wave = vec2(
 			  sin(
 				tau * g * TT 
-				 
 				+sin(h(i*2.4 + tid).x*15.*TT)*4. * smoothstep(10.,20.,T) // chorus
 				+ sin(tau * g * TT*2.)*env*env*env*0.6 * smoothstep(20.,60.,T)  // fm
+
+				- outro_mw
+				//- pow(outro,65.)* cyclic(vec3(vec2(sin(t),cos(t)),i)*100., 1., 1.).xy*30.*100000.
+				//- pow(outro,65.)* cyclic(vec3(vec2(sin(t),cos(t)),10.*t)*100., 1., 1.).xy*30.*100000.
 			  )
 			) * rot(i);
 	  
@@ -395,5 +405,6 @@ void main(){
 	//s *= 0.;
  
 
-	hist[samp + 3000000] = s*genv + chord*outro;
+	hist[samp + 3000000] = s*genv + tanh(chord*outro*0.2 + sin(tau*30.*Tt)*10. * pow(outro,30.));
+			
 }

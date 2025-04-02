@@ -142,6 +142,7 @@ void main( ){
 	float repd = 0.5 + sin(T*0.5)*2./T;
 	float eenv = mod(T,repd);
 	eenv = exp(-eenv*40.);
+	//eenv = 1.;
 
 	float K_COL = 0.03
 		+ 0.1* smoothstep(90.,190.,T)
@@ -151,7 +152,7 @@ void main( ){
 	K_GLITCH += 
 		smoothstep(0.,50.,T);
 	K_GLITCH *= pow(hash_f_s(floor(T)), 2);
-	K_GLITCH + 0.9* smoothstep(160.,190.,T)*eenv;
+	K_GLITCH += 0.9* smoothstep(160.,190.,T)*eenv; // doesnt do much
 	K_GLITCH *= 1.-end + endb;
 
 
@@ -177,6 +178,7 @@ void main( ){
 		col = pow(abs(col),vec3(0.02));
 	}
 
+
 	if(T > 60 && T < 65.){
 		col = 1. - col;
 		//env = exp(-(T-60.))*4.;
@@ -188,9 +190,16 @@ void main( ){
 		col -= pal;
 	}
 
+	//col = mix(col, hash_v3(), smoothstep(460.,461.,T));
+
 	C = vec4(pow(abs(col), vec3(2./0.45454545)),1);
 
-	if(mod(T,9.- endb*5.) < 1.){
+
+	if(T > 460.){
+		//hist[hist_id] *= 5;
+		hist[hist_id] = (hist[hist_id]*400)%10000000;
+	
+	} else if(mod(T,9.- endb*5.) < 1. - float(T > 460.)){
 		hist[hist_id] = 0;
 	} else {
 		if (col.x < 0.0 + K_GLITCH){
@@ -199,15 +208,15 @@ void main( ){
 			offs *= ((int(hash_f() < col.x*1111.))*2 - 1)*(1 + 5*int(hash_f_s(floor(T))));
 			offs *= int(hash_f_s(floor(T) * 124.)*2.)*2 - 1;
 			offs *= 1 + int(endb * smoothstep(3.,0.,mod(T,4.))*20.);
-			if(T > 122){
-				offs = ivec2(offs.y,offs.x);
+			if(T > 122 && T < 250.){
+				//offs = ivec2(offs.y,offs.x);
 			}
 			if(T > 316 && hash_f() > 0.5){
 				//offs = ivec2(offs.y,offs.x)/10;
 				offs -= offs;
 			}
 			
-			hist[hist_id] =	hist[get_hist_id((ivec2(gl_FragCoord.xy) + offs))];
+		hist[hist_id] = hist[get_hist_id((ivec2(gl_FragCoord.xy) + offs))];
 		}else {
 			hist[hist_id] = 0;
 		}
@@ -218,7 +227,6 @@ void main( ){
 	}
 	if(T > 350.){
 		C = vec4(dot(C,C) < 0.5);
-		//if(dot(C,C) > 0.5){}
 	}
 
 
@@ -250,34 +258,11 @@ void main( ){
 			draw_char(uv,  sd, 33, 4); // K
 		}
 		if(sd < 0.){
-			
-			
 			//hist[hist_id] = 1 - hist[hist_id]*500000;
 			hist[hist_id] += 100000;
 			//hist[hist_id] = -1u;
-			//C *= 0.;
 		}
 	}
-
-//    fragColor = vec4(1,0,0,1);    
-	//fragColor = texture(tex_music, uv);
-//	fragColor = imageLoad(img_music, ivec2(gl_FragCoord.xy));
-
-
-	//asdgsdagasdg
-
-	//asdgasdg
-	//asdg
-	//asdgasdg
-
-	//oasdgasdg
-
-	//fragColor *= 0.000001;
-	//asdg
-
-	//fragColor *= fract(T);
-
-	
 }
 
 
