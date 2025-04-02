@@ -88,14 +88,22 @@ void dbg_validate_shaders(){
 	static bool keys_pressed[20] = {};
 	static bool paused = false;
 
+	static float editor_loop_start = 0;
+	static float editor_loop_end = SONG_DURATION - 0.002;
+	static bool editor_loop_popup_finished = false;
+	static LARGE_INTEGER editor_timer_start, editor_timer_freq;
+	static float editor_average_ms = 0.;
+
 	#define key_space_down  keys_pressed[0]
 	#define key_left_down  keys_pressed[1]
 	#define key_right_down  keys_pressed[2]
 	#define key_lmb_down  keys_pressed[3]
 	#define key_aaaaa_down  keys_pressed[4]
 	#define key_s_down  keys_pressed[5]
+	#define key_l_down keys_pressed[6]
 
 	void editor_create_console() {
+		QueryPerformanceFrequency(&editor_timer_freq);
 		if (!AllocConsole()) {
 			// DWORD dwError = GetLastError();
 			// char errorMessage[256];
@@ -147,6 +155,9 @@ void dbg_validate_shaders(){
 							if (wParam == 'S') {
 								key_s_down = true;
 							}
+							if (wParam == 'L') {
+								key_l_down = true;
+							}
 							break;
 			}
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -157,8 +168,64 @@ void dbg_validate_shaders(){
 	void editor_print_to_console(const char* message);
 #endif
 
+
+void editor_start_timer() {
+#if EDITOR
+	QueryPerformanceCounter(&editor_timer_start);
+#endif
+}
+
+
+void editor_end_timer(const char* label) {
+#if EDITOR
+	char out_buffer[1024];
+	LARGE_INTEGER editor_timer_end;
+
+	QueryPerformanceCounter(&editor_timer_end);
+
+	double elapsed_ms = (double)(editor_timer_end.QuadPart - editor_timer_start.QuadPart) * 1000.0 / editor_timer_freq.QuadPart;
+	
+	sprintf(out_buffer, "%.2f ms %s", float(elapsed_ms), label);
+	//wsprintfA(out_buffer, , elapsed_ms, label);
+
+	editor_print_to_console(out_buffer);
+	editor_print_to_console("\n");
+#endif
+}
+
+void editor_do_fps_counter(){
+#if EDITOR
+	static bool intialized = false;
+
+
+	//static LARGE_INTEGER timer_start;
+	static LARGE_INTEGER last_time;
+	static LARGE_INTEGER curr_time;
+
+
+	QueryPerformanceCounter(&curr_time);
+
+
+	//QueryPerformanceCounter(&timer_start);
+	
+	//if(!initia)
+
+
+	if(intialized){
+		double new_ms = (double)(curr_time.QuadPart - last_time.QuadPart) * 1000.0 / editor_timer_freq.QuadPart;
+
+		float lerp_speed = 0.04;
+		editor_average_ms = new_ms * lerp_speed + editor_average_ms * (1.-lerp_speed);
+	}
+
+	last_time = curr_time;
+
+	intialized = true;
+#endif
+}
+
 static void _inline editor_reload_from_disk() {
-	#if OPENGL_DEBUG
+	#if EDITOR
 	bool prev_shader_failed_compile = shader_failed_compile;
 	shader_failed_compile = false;
 
@@ -308,6 +375,71 @@ static void _inline editor_try_reload() {
 
 
 
+// Global variables to store the input values
+
+// Window procedure to handle the interactions with the custom window
+LRESULT CALLBACK editor_loop_popup_window_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+#if EDITOR
+    switch (uMsg) {
+        case WM_COMMAND:
+            if (LOWORD(wParam) == 103) { // OK button clicked
+                char buffer1[16], buffer2[16];
+                GetWindowText(GetDlgItem(hwnd, 101), buffer1, sizeof(buffer1));
+                GetWindowText(GetDlgItem(hwnd, 102), buffer2, sizeof(buffer2));
+								editor_loop_start = atoi(buffer1);
+								editor_loop_end = atoi(buffer2);
+								editor_loop_popup_finished = true;
+                PostMessage(hwnd, WM_CLOSE, 0, 0);
+								DestroyWindow(hwnd);
+                return 0;
+            }
+            break;
+        case WM_CLOSE:
+            DestroyWindow(hwnd);
+            return 0;
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+#endif
+	return LRESULT(0);
+}
+
+// Function to create the input window and get two integers from the user
+void editor_do_loop_popup(const char* title) {
+#if EDITOR
+		editor_loop_popup_finished = false;
+    WNDCLASS wc = {0};
+    wc.lpfnWndProc = editor_loop_popup_window_proc;
+    wc.hInstance = GetModuleHandle(NULL);
+    wc.lpszClassName = "InputDialogClass";
+    RegisterClass(&wc);
+
+    HWND hwnd = CreateWindowEx(0, "InputDialogClass", title, WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                               CW_USEDEFAULT, CW_USEDEFAULT, 300, 400, NULL, NULL, GetModuleHandle(NULL), NULL);
+
+    if (!hwnd) {
+        MessageBoxA(NULL, "Failed to create window", "Error", MB_OK | MB_ICONERROR);
+				return;
+    }
+
+    CreateWindow("STATIC", "First Value:", WS_VISIBLE | WS_CHILD, 10, 40, 200, 20, hwnd, NULL, NULL, NULL);
+    CreateWindow("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER, 10, 70, 200, 20, hwnd, (HMENU)101, NULL, NULL);
+
+    CreateWindow("STATIC", "Second Value:", WS_VISIBLE | WS_CHILD, 10, 100, 200, 20, hwnd, NULL, NULL, NULL);
+    CreateWindow("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER, 10, 130, 200, 20, hwnd, (HMENU)102, NULL, NULL);
+
+    CreateWindow("BUTTON", "OK", WS_VISIBLE | WS_CHILD, 10, 160, 50, 20, hwnd, (HMENU)103, NULL, NULL);
+
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0) && !editor_loop_popup_finished) {
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+#endif
+}
+
+
 static void __forceinline do_editor_stuff(){
 	// Focus main window
 #if EDITOR
@@ -344,6 +476,22 @@ static void __forceinline do_editor_stuff(){
 	 	SetWindowPos(hwndConsole, HWND_TOP, rect.left, rect.bottom, rect.right - rect.left, 300, SWP_NOACTIVATE | SWP_NOSIZE | SWP_SHOWWINDOW);
 	}
 
+	if(key_l_down){
+		editor_do_loop_popup("Loop start");
+
+		if(editor_loop_start == 0 && editor_loop_end == 0){
+			editor_loop_end = SONG_DURATION;
+		}
+		if(editor_loop_start < 0){
+			editor_loop_start = 0;
+		}
+
+		if(editor_loop_end > SONG_DURATION){
+			editor_loop_end = SONG_DURATION;
+		}
+		
+	}
+
 	// --- Pause
 	{
 		if(key_space_down){ 
@@ -362,11 +510,11 @@ static void __forceinline do_editor_stuff(){
 	}
 
 
-
 	// --- Update titlebar
 	{
 		char buffer[50];
-    sprintf(buffer, "%.2f", editor_time);
+		//editor_average_ms
+    sprintf(buffer, "%.2fs ------- %.2fms ------- %.2fps", editor_time, editor_average_ms, 1000./editor_average_ms);
 		SetWindowText(hwnd, buffer);
 	}
 
@@ -411,8 +559,8 @@ static void __forceinline do_editor_stuff(){
 			audio_seek(target_time);
 		}
 
-		if( audio_time > SONG_DURATION - 0.5){
-			audio_seek(0);
+		if( audio_time > editor_loop_end - 0.04){
+			audio_seek(editor_loop_start);
 		}
 	}
 

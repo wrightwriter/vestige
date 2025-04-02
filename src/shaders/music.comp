@@ -1,10 +1,16 @@
 #version 460 core
 
-// [
 layout(local_size_x=256,local_size_y=1,local_size_z=1) in;
-// ]
 
 layout(std430,binding=0) buffer A{vec2 hist[];};
+
+//#define ANTI_TDR
+//#ifdef ANTI_TDR
+layout(location = 0) uniform int offs;
+//#endif
+
+
+
 
 const float pi = acos(-1.);
 const float tau = 2.*pi;
@@ -61,15 +67,20 @@ vec3 cyclic(vec3 p, float pers, float lacu) {
 
 
 
+
 void main(){
 	uint samp = gl_GlobalInvocationID.x;
+//#ifdef ANTI_TDR
+	samp += uint(offs);
+//#endif
+
 	vec2 s = vec2(0);
 	float T = float(samp) / 44100.;
 	float Tt = T;
 
 	//float interp = 
 
-    uint repd = 44100*6;
+    uint repd = 44100*12;
     float TT = float(samp%repd)/44100.;
 
 
@@ -78,9 +89,11 @@ void main(){
 	if(T> 280.0){
 		float t = mod(T, 4.);
 		float env = exp(-t*10.);
+		//env +=  ;
 		
-		float f = 30.;
-        s += env*sin(TT*f*tau + sin(TT*f*tau*10.) * env*0.2  )*15.;
+		float f = 30.+ pow(outro,40.)*100.;
+        s += (env + pow(outro,40.)*0.)*sin(TT*f*tau + sin(TT*f*tau*10.) * env*0.2  )*(20.);
+
 
 		//float sub = 
 		//s += exp()
@@ -170,7 +183,7 @@ void main(){
 			
 			float ot = pow(h(i + k*1.5 + tid).x,2. +.5 * smoothstep(500.,2000.,g));
 			g *= 1. + floor(ot*ots);
-			g += (h(k + i*1.4).x - 0.5)*20.*(smoothstep(0.,30.,T) + pow(outro,95.)*1000.);
+			g += (h(k + i*1.4).x - 0.5)*20.*(smoothstep(0.,30.,T) - pow(outro,65.)*35.);
 			float env = exp(
 			  -t*(7. - 6.*smoothstep(2000.,800.,g))*0.7) 
 			  * smoothstep(replen*2.,0.,t) 
@@ -189,7 +202,7 @@ void main(){
 			) * rot(i);
 	  
 			chord += env * wave/its/kits*200.3 * (float(T < 60.) 
-				+ outro*1.
+				+ outro*4.
 
 
 				//* smoothstep(0.,0.2,t)
@@ -305,7 +318,9 @@ void main(){
         //t += sin(i*4. + float(n) + T*0.3)*14.;
 
 
+
         
+
         vec2 ss = cyclic(
             //vec3(vec2(sin(t),cos(t)),i*0.1 + float(n))
             vec3(fract(t/tau)) * vec3(2.0, -3.0, -8.0)
@@ -321,8 +336,9 @@ void main(){
             0. + smoothstep(120.,144.,T)*2.
         ).xy * rot(-i*.5 );
 
+
         
-        s += ss /its*0.15*smoothstep(60.,100.,T);
+        s += ss /its*0.15*smoothstep(60.,100.,T)*5.*smoothstep(250.,230.,Tt);
     }
     }
     
@@ -372,11 +388,12 @@ void main(){
     s += qq;
 
     
-	s = tanh(s*1.2);
+	s = tanh(s*1.2*smoothstep(0.,5.,Tt));
 	s *= 2.;
 	s = clamp(s,-1.,1.);
 	//s += chord*outro;
 	//s *= 0.;
+ 
 
 	hist[samp + 3000000] = s*genv + chord*outro;
 }

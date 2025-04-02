@@ -55,11 +55,43 @@ static __forceinline double audio_get_time_seconds() {
 	return double(audio_get_time_samples()) / double(44100);
 }
 
-static void __forceinline audio_render() { 
+void editor_start_timer();
+void editor_end_timer(const char* label);
+
+static void audio_render() { 
+	editor_start_timer();
 	oglUseProgram(PROG_MUSIC);
-	int samples_cnt = SAMPLE_RATE * SONG_DURATION;
-	oglDispatchCompute(samples_cnt / 256 + 1, 1, 1);
-	oglGetNamedBufferSubData(ssbo, 3000000*4*2, samples_cnt * 4 * 2, &lpSoundBuffer);
+	constexpr int samples_cnt = SAMPLE_RATE * SONG_DURATION; 
+	constexpr int bytes_per_samp = 4 * 2; // two f32
+
+	constexpr int local_thread_cnt = 256;
+
+	constexpr int total_group_dispatches = samples_cnt / local_thread_cnt + 1; 
+	constexpr int gpu_buff_start_offs_bytes = 3000000*bytes_per_samp;
+
+	constexpr int total_byte_count  = samples_cnt * bytes_per_samp;
+
+	// 20727000 samples
+	// 80965 group dispatches
+
+#if ANTI_TDR
+		constexpr int group_disp_batch_cnt = 1024;
+		constexpr int bytes_per_disp = group_disp_batch_cnt * local_thread_cnt * bytes_per_samp;
+
+		for(int group_disp_idx = 0; group_disp_idx <= total_group_dispatches; group_disp_idx += group_disp_batch_cnt){
+			oglUniform1i(0, local_thread_cnt * group_disp_idx);
+			oglDispatchCompute(group_disp_batch_cnt, 1, 1);
+			float* cpu_write_ptr = &lpSoundBuffer[0];
+			//cpu_write_ptr += group_disp_idx * local_thread_cnt * 2;
+			glFlush();
+			glFinish();
+		}
+		//oglGetNamedBufferSubData(ssbo, gpu_buff_start_offs_bytes, total_byte_count, &lpSoundBuffer);
+#else
+		oglDispatchCompute(total_group_dispatches, 1, 1);
+#endif
+		oglGetNamedBufferSubData(ssbo, gpu_buff_start_offs_bytes, total_byte_count, &lpSoundBuffer);
+	editor_end_timer("audio reload\n");
 }
 
 

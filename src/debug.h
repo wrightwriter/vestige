@@ -11,16 +11,16 @@
 
 
 // Assuming a maximum of 100 paths, adjust if needed.
-#if OPENGL_DEBUG
+#if OPENGL_DEBUG || EDITOR
 	// Global array of file paths
 	static const char* shader_strings[100];
 	static const char* file_paths[100];
 	static unsigned int shader_types[100];
 	static size_t shaders_count = 0;
-	static bool audio_shader_just_reloaded = false;
 #endif
 
 #if EDITOR || OPENGL_DEBUG
+	static bool audio_shader_just_reloaded = false;
 	static bool shader_failed_compile = false;
 #endif
 
@@ -78,9 +78,10 @@ dbg_gl_message_callback(GLenum source,
 	const void* userParam)
 {
 
-	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION || severity == 37191) // 37191 is buffer leaking to cpu mem warning.
+	//if (severity == GL_DEBUG_SEVERITY_NOTIFICATION || severity == 37191) // 37191 is buffer leaking to cpu mem warning.
+	if (severity == GL_DEBUG_SEVERITY_NOTIFICATION || severity == 33387 || severity == 37191) // 37191 is buffer leaking to cpu mem warning.
 		return;
-	MessageBox(NULL, message, message, 0x00000000L);
+	//MessageBox(NULL, message, message, 0x00000000L);
 
 	//fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
 	//	(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),

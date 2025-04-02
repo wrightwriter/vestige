@@ -8,7 +8,7 @@ layout(std430,binding=0) coherent buffer Aa{uint hist[];};
 
 out vec4 C;
 
-uint seed = 111425u;
+uint seed;
 uint hash_u(uint _a) {
 	uint a = _a;
 	a ^= a >> 16;
@@ -30,21 +30,102 @@ uint get_hist_id(ivec2 c){
 }
 
 
-const int COL_CNT = 4;
-vec3[4] kCols = vec3[](
-	vec3(1.,1,1), vec3(1.,0.,1.),
-	vec3(1,1.,0.1)*1., vec3(0.5,1,1.)*1.5
-);
 
 vec3 mix_cols(float idx){
-	//idx = mod(idx,1.);
-	int cols_idx = int(idx*float(COL_CNT));
-	float fract_idx = fract(idx*float(COL_CNT));
-	fract_idx = smoothstep(0.,1.,fract_idx);
-	//return oklab_mix( kCols[cols_idx], kCols[(cols_idx + 1)%COL_CNT], fract_idx );
-	return mix( kCols[cols_idx], kCols[(cols_idx + 1)%COL_CNT], fract_idx );
+	vec3[4] kCols = vec3[](
+		vec3(1,1,1), vec3(1,0,1), vec3(1,1,.1), vec3(.5,1,1)*1.5
+	);
+	return mix( kCols[int(idx)%4], kCols[int(idx + 1)%4], smoothstep(0.,1.,fract(idx)) );
 }
 
+/*
+float sdb( in vec2 p, in vec2 a, in vec2 b, float th ){
+    float l = length(b-a);
+    vec2  d = (b-a)/l;
+    vec2  q = (p-(a+b)*0.5);
+          q = mat2(d.x,-d.y,d.y,d.x)*q;
+          q = abs(q)-vec2(l,th)*0.5;
+    return length(max(q,0.0)) + min(max(q.x - th,q.y),0.0);    
+} */
+
+
+int[148] chars = int[](
+    // C 0 4
+    -1,-1,-1,1,
+    -1,1,1,1,
+    -1,1,-1,-1,
+    -1,-1,1,-1,
+
+    // A 4 5
+    -1,-1,-1,1,
+    -1,1,1,1,
+    -1,0,1,0,
+    -1,1,-1,-1,
+    1,1,1,-1,
+    
+    
+    // N 9 4
+    -1,-1,-1,1,
+    -1,1,1,1,
+    -1,1,-1,-1,
+    1,1,1,-1,
+    
+    // T 13 3
+    -1,-1,-1,1,
+    -1,1,1,1,
+    0,1,0,-1,
+    
+    
+    // G 16 5
+    -1,-1,-1,1,
+    -1,1,1,1,
+    -1,-1,1,-1,
+    -1,1,-1,-1,
+    1,0,1,-1,
+    1,0,0,0,
+    
+    
+    // O 22 5
+    -1,-1,-1,1,
+    -1,1,1,1,
+    -1,-1,1,-1,
+    -1,1,-1,-1,
+    1,1,1,-1,
+    
+    
+    // O 27 6
+    -1,-1,-1,1,
+    -1,1,1,1,
+    -1,-1,1,-1,
+    -1,0,1,0,
+    -1,1,-1,-1,
+    1,1,1,-1,
+    
+    // K 33 4
+    -1,-1,-1,1,
+    -1,0,1,-1,
+    -1,0,1,1,
+    -1,1,-1,-1
+    
+);
+
+
+
+float draw_char(inout vec2 p, inout float sd, int char_idx, int char_cnt){
+    float th = 0.2;
+    for(int i = char_idx; ++i < char_cnt + char_idx;){
+		vec2 a = vec2(chars[i*4], chars[i*4 + 1]);
+		vec2 b = vec2(chars[i*4 + 2], chars[i*4 + 3]);
+		float l = length(b-a);
+		vec2  d = (b-a)/l;
+		vec2  q = (p-(a+b)*0.5);
+			  q = mat2(d.x,-d.y,d.y,d.x)*q;
+			  q = abs(q)-vec2(l,th)*0.5;
+        sd = min(sd,length(max(q,0.0)) + min(max(q.x - th,q.y),0.0));
+    }
+    p.x -= 2.5;
+    return sd;
+}
 
 
 
@@ -86,7 +167,7 @@ void main( ){
 
 	// tonemap
 	vec3 col = vec3(hist[hist_id]) * 0.0001;
-	vec3 pal = mix_cols(mod(col.x*115.,1.));
+	vec3 pal = mix_cols(col.x*115.*4.);
 	col = col/(1.+col);
 	if(hash_f_s(floor(T*0.8))<0.7){
 	//if(true){
@@ -139,6 +220,45 @@ void main( ){
 		C = vec4(dot(C,C) < 0.5);
 		//if(dot(C,C) > 0.5){}
 	}
+
+
+	uv = (gl_FragCoord.xy - R.xy/2.)/R.y;
+    float sd = 1000.;
+	//uv.x += 0.6;
+	//uv *= 20.;
+	
+	uv *= 20.;
+
+	if(T > 420 && T < 450){
+		int char_idx = int(T)%3;
+		//char_idx = 2;
+		if(char_idx == 0){
+			uv.x += 20./5. - 0.25;
+			draw_char(uv,  sd, 0, 4); // C
+			draw_char(uv,  sd, 4, 5); // A
+			draw_char(uv,  sd, 9, 4); // N
+			draw_char(uv,  sd, 13, 3);// T
+		} else if (char_idx == 1){
+			uv.x += 20./13.5 - 0.25;
+			draw_char(uv,  sd, 16, 6); // G
+			draw_char(uv,  sd, 22, 5); // O
+		} else{
+			uv.x += 20./5. - 0.25;
+			draw_char(uv,  sd, 27, 6); // B
+			draw_char(uv,  sd, 4, 5); // A
+			draw_char(uv,  sd, 0, 4); // C
+			draw_char(uv,  sd, 33, 4); // K
+		}
+		if(sd < 0.){
+			
+			
+			//hist[hist_id] = 1 - hist[hist_id]*500000;
+			hist[hist_id] += 100000;
+			//hist[hist_id] = -1u;
+			//C *= 0.;
+		}
+	}
+
 //    fragColor = vec4(1,0,0,1);    
 	//fragColor = texture(tex_music, uv);
 //	fragColor = imageLoad(img_music, ivec2(gl_FragCoord.xy));

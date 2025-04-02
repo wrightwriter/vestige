@@ -1,14 +1,21 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
-#define EDITOR									0
+#define EDITOR									1
 #define EDITOR_FORCE_RELOAD_FROM_DISK			0
 #define VALIDATE_SHADERS_GLSLANG				0
 #define OPENGL_DEBUG							0
 #define FULLSCREEN								0
 #define VSYNC									1
 #define AUTORES									0
+#define ANTI_TDR								1
+#define LAPTOP_GPU_FIX								1
 
-
+#if LAPTOP_GPU_FIX
+extern "C" {
+	__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
 
 #define XRES										1280
 #define YRES										720
@@ -219,7 +226,7 @@ void entrypoint(void) {
 		do_editor_stuff();
 		SwapBuffers(hDC);
 	} while (
-	#if OPENGL_DEBUG
+	#if OPENGL_DEBUG || EDITOR
 		true
 	#else
 		!GetAsyncKeyState(VK_ESCAPE) || audio_time > SONG_DURATION

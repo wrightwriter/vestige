@@ -7,6 +7,8 @@ layout(local_size_x=256,local_size_y=1,local_size_z=1) in;
 layout(std430,binding=0) coherent buffer Aaa{uint hist[];};
 
 
+
+
 //layout(location = 0) uniform int iFrame;
 layout(location = 1) uniform float Tt;
 layout(location = 2) uniform vec2 R;
@@ -17,7 +19,7 @@ float T;
 const float pi = acos(-1.);
 const float tau = acos(-1.) * 2.;
 
-uint seed = 111425u;
+uint seed;
 uint hash_u(uint _a) {
     uint a = _a;
     a ^= a >> 16;
@@ -77,10 +79,11 @@ void main( ){
 	eenv = exp(-eenv*4.);
 
 
+	float midsec = smoothstep(160.,180.,T) * smoothstep(250.,245.,T);
 	// K OFFS LATER ON
 	float K_OFFS = 
 		0.4* smoothstep(45.,15.,T)
-		-(.4)* smoothstep(160.,180.,T)*eenv
+		-(.1)* midsec * eenv * sign(hash_f_s(T)- 0.5)
 		+(.4)* smoothstep(314.,320.,T)*eenv
 		;
 	K_OFFS *=  1. - end;
@@ -91,6 +94,7 @@ void main( ){
 	bool K_SPHINV = hash_f_s(floor(T + 1555))>0.5;
 	float K_DIR_SC = 1.
 		+ 0.02* smoothstep(90.,150.,T)
+		- midsec*0.12
 	;
 	float K_PERSP = 0.2
 		+ 0.4* smoothstep(60.,80.,T)

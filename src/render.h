@@ -16,8 +16,11 @@ static void __forceinline init_resources() {
 	// ssbo
 
 	{
+		//oglNamedBufferStorage(ssbo,1000000 * 200,0,0); // 1 megabyte, too much
+		//oglNamedBufferStorage(ssbo, 262144000,0,GL_CLIENT_STORAGE_BIT); // 
 		oglCreateBuffers(1, &ssbo);
-		oglNamedBufferStorage(ssbo,1000000 * 200,0,0); // 1 megabyte, too much
+		//oglNamedBufferStorage(ssbo, 262144000,0,0); // 
+		oglNamedBufferStorage(ssbo, 292144000,0,0); // 
 		oglBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, ssbo);
 	}
 	// framebuffer
@@ -83,6 +86,7 @@ static void __forceinline pre_loop() {
 
 
 static void __forceinline main_loop() {
+	editor_do_fps_counter();
 	editor_try_reload();
 	#if EDITOR
 		audio_time = editor_time;
