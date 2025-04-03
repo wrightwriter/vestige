@@ -89,10 +89,12 @@ void dbg_validate_shaders(){
 	static bool paused = false;
 
 	static float editor_loop_start = 0;
-	static float editor_loop_end = SONG_DURATION - 0.002;
+	static float editor_loop_end = MUSIC_DURATION - 0.002;
 	static bool editor_loop_popup_finished = false;
 	static LARGE_INTEGER editor_timer_start, editor_timer_freq;
 	static float editor_average_ms = 0.;
+	
+	static bool editor_just_started = true;
 
 	FILE* ffmpeg = nullptr;
 	static bool editor_is_recording = false;
@@ -457,7 +459,7 @@ void editor_do_loop_popup(const char* title) {
 
 
 // Read OpenGL framebuffer and send to FFMPEG
-void captureFrame() {
+void editor_ffmpeg_capture_frame() {
 	// PBOs for non-blocking readback
 	static GLuint pboIds[2] = { 0, 0 };
 	static int pboIndex = 0;
@@ -472,6 +474,7 @@ void captureFrame() {
 		oglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 		pboInitialized = true;
 	}
+
 	{
     int nextIndex = (pboIndex + 1) % 2; // Swap PBOs
     glReadBuffer(GL_BACK);
@@ -508,26 +511,57 @@ void captureFrame() {
 static void __forceinline do_editor_stuff(){
 	// Focus main window
 #if EDITOR
-	if(key_r_down){
+	bool should_toggle_recording = key_r_down;
+	#if DO_PERFECT_FFMPEG_CAPTURE
+		static bool finished_perfect_ffmpeg_capture = false;
+		if(!finished_perfect_ffmpeg_capture){
+			if(editor_just_started){
+				music_mute();
+				should_toggle_recording = true;
+			//} else if(editor_time > MUSIC_DURATION){
+			//} else if(editor_time > MUSIC_DURATION - 0.2){
+			} else if(editor_time > MUSIC_DURATION - 0.2){
+				should_toggle_recording = true;
+				finished_perfect_ffmpeg_capture = true;
+			}
+		}
+
+	#endif
+	if(should_toggle_recording){
 		if(!editor_is_recording){
 			//ffmpeg = _popen(
 			//		"ffmpeg -y -f rawvideo -pixel_format rgb24 -video_size 1280x720 -r 60 -i - " // HARDCODED RESOLUTION
 			//		"-c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p output.mp4",
 			//		"wb"
 			//);
+
 			ffmpeg = _popen(
 				"ffmpeg -y "                                // Overwrite output file if it exists
 				"-f rawvideo "                              // Input format: raw pixel data
+				"-thread_queue_size 512 "
 				"-pixel_format rgb24 "                      // Pixel format: 24-bit RGB (8 bits per channel)
 				"-video_size 1280x720 "                     // Input resolution (must match OpenGL framebuffer)
 				"-r 60 "                                    // Frame rate: 30 FPS
 				"-i - "                                     // Read input from stdin (piped from our program)
-				"-vf vflip "                                // Flip the image vertically (fix OpenGL bottom-to-top issue)
+				#if DO_PERFECT_FFMPEG_CAPTURE
+					"-i song.wav "  // Input WAV file
+				#endif
+				//"-vf vflip "                                // Flip the image vertically (fix OpenGL bottom-to-top issue)
+				"-vf scale=3840:2160:flags=lanczos,vflip "  // Upscale to 4K with Lanczos filter and flip the image
 				"-c:v libx264 "                             // Use H.264 codec for video compression
 				"-preset fast "                             // Optimize for faster encoding
+
+				// ----	QUALITY ---- //
 				"-crf 18 "                                  // Quality setting (lower = better, 18 = visually lossless)
+
 				"-pix_fmt yuv420p "                         // Convert RGB to YUV 4:2:0 for playback compatibility
-				"output.mp4",                               // Output file name
+
+				"-g 120 "                                   // Keyframe interval for YouTube (2 seconds at 60 FPS)
+				"-c:a aac "                                 // Audio codec: AAC
+				"-b:a 320k "                                // Audio bit rate: 320 kbps
+				"-ar 48000 "                                // Audio sample rate: 48 kHz
+
+				"outputb.mp4",                               // Output file name
 				"wb"
 			);
 			if (!ffmpeg) {
@@ -538,14 +572,17 @@ static void __forceinline do_editor_stuff(){
 		} else {
 			_pclose(ffmpeg);
 			editor_is_recording = false;
+			#if DO_PERFECT_FFMPEG_CAPTURE
+					MessageBox(NULL, "Finished FFMPEG capture!", "Woo", MB_ICONERROR);
+			#endif
 		}
 	}
 
 	if(editor_is_recording){
-		captureFrame();
+		editor_ffmpeg_capture_frame();
 	}
 
-	double audio_time = audio_get_time_seconds();
+	double music_time = music_get_time_seconds();
 
 	// --- Toggle gui
 	if(key_aaaaa_down){
@@ -592,14 +629,14 @@ static void __forceinline do_editor_stuff(){
 		editor_do_loop_popup("Loop start");
 
 		if(editor_loop_start == 0 && editor_loop_end == 0){
-			editor_loop_end = SONG_DURATION;
+			editor_loop_end = MUSIC_DURATION;
 		}
 		if(editor_loop_start < 0){
 			editor_loop_start = 0;
 		}
 
-		if(editor_loop_end > SONG_DURATION){
-			editor_loop_end = SONG_DURATION;
+		if(editor_loop_end > MUSIC_DURATION){
+			editor_loop_end = MUSIC_DURATION;
 		}
 		
 	}
@@ -608,16 +645,20 @@ static void __forceinline do_editor_stuff(){
 	{
 		if(key_space_down){ 
 			if(paused){		// unpause
-				audio_unmute();
-				audio_seek(editor_time);
+				music_unmute();
+				music_seek(editor_time);
 			} else {			// pause
-				audio_mute();
-				editor_time = audio_time;
+				music_mute();
+				editor_time = music_time;
 			}
 			paused = !paused;
 		}
 		if(!paused){
-			editor_time = audio_time;
+			#if DO_PERFECT_FFMPEG_CAPTURE
+				editor_time += 1./60.;
+			#else
+				editor_time = music_time;
+			#endif
 		}
 	}
 
@@ -633,6 +674,9 @@ static void __forceinline do_editor_stuff(){
 
 
 	// --- Draw Gui
+
+	#if !DO_PERFECT_FFMPEG_CAPTURE
+		//if(false)
 	{
 		oglUseProgram(0);
 
@@ -640,7 +684,7 @@ static void __forceinline do_editor_stuff(){
 			float width = 0.05;
 			float height = 0.05;
 			float pos_y = -1;
-			float pos_x = editor_time/float(SONG_DURATION)*2.0 - 1.;
+			float pos_x = editor_time/float(MUSIC_DURATION)*2.0 - 1.;
 
 			
 			glPointSize(30.0f); // Set point size (in pixels)
@@ -658,6 +702,7 @@ static void __forceinline do_editor_stuff(){
 			glEnd();
 		}
 	}
+	#endif
 
 	// --- Seek
 	{
@@ -667,7 +712,7 @@ static void __forceinline do_editor_stuff(){
 		if(should_seek && win_focused){
 			double target_time;
 			if(is_mouse_seeking){
-				target_time = SONG_DURATION * (mouse_x_ndc + 1) / 2;
+				target_time = MUSIC_DURATION * (mouse_x_ndc + 1) / 2;
 			} else if (is_kbd_seeking){
 				float seek_amt_s = 10.;
 				target_time += float(key_right_down) * seek_amt_s;
@@ -680,25 +725,25 @@ static void __forceinline do_editor_stuff(){
 			if(paused){
 				editor_time = target_time;
 			}
-			audio_seek(target_time);
+			music_seek(target_time);
 		}
 
-		if( audio_time > editor_loop_end - 0.04){
-			audio_seek(editor_loop_start);
+		if( music_time > editor_loop_end - 0.04){
+			music_seek(editor_loop_start);
 		}
 	}
 
 	// --- Re-render audio
 	if(audio_shader_just_reloaded){
-		audio_render();
-		audio_seek(audio_time);
+		music_render();
+		music_seek(music_time);
 		editor_print_to_console("-------- Audio shader reloaded! -------- \n");
 	}
 
 	// --- Save wav
 	{
 		if(key_s_down){
-			audio_save_wav();
+			music_save_wav();
 		}
 	}
 
@@ -709,6 +754,7 @@ static void __forceinline do_editor_stuff(){
 		}
 		audio_shader_just_reloaded = false;
 	}
+	editor_just_started = false;
 #endif
 	
 }

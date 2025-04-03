@@ -29,7 +29,7 @@ static void __forceinline init_resources() {
 	//	glGenTextures(1, &textures[i] );
 	//	glBindTexture(GL_TEXTURE_2D, textures[i] );
 	//	GLint internal_format;
-	//	glTexImage2D(GL_TEXTURE_2D, 0, internal_format = GL_RGBA32F, MUSICRESX, MUSICRESY, 0, GL_RGBA, GL_FLOAT, 0);
+	//	glTexImage2D(GL_TEXTURE_2D, 0, internal_format = GL_RGBA32F, MUSIC_RESX, MUSIC_RESY, 0, GL_RGBA, GL_FLOAT, 0);
 	//	// parameters
 	//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	//	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -66,9 +66,9 @@ static void __forceinline main_loop() {
 	editor_do_fps_counter();
 	editor_try_reload();
 	#if EDITOR
-		audio_time = editor_time;
+		music_time = editor_time;
 	#else
-		audio_time = audio_get_time_seconds();
+		music_time = music_get_time_seconds();
 	#endif
 
 	//glViewport(0,0,XRES, YRES);
@@ -77,7 +77,7 @@ static void __forceinline main_loop() {
 	{
 		OglUseProgram(PROG_RENDER);
 		//oglUniform1i(0, frame);
-		OglUniform1f(1, audio_time);
+		OglUniform1f(1, music_time);
 		//oglUniform2f(2, xres, yres);
 		OglDispatchCompute(64 * 64 * 2 / 16*2, 1, 1);
 		frame += 1;
@@ -89,8 +89,8 @@ static void __forceinline main_loop() {
 		// glDrawBuffer(GL_BACK);
 
 		OglUseProgram(PROG_POST);
-		//oglUniform1i(0, frame); // unused
-		OglUniform1f(1, audio_time);
+		//	oglUniform1i(0, frame); // unused
+		OglUniform1f(1, music_time);
 		//oglUniform2f(2, xres, yres);
 		glRects(-1, -1, 1, 1);
 	}

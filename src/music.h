@@ -1,59 +1,59 @@
 #pragma once
 
 
-#define MUSICRESX								2000
-#define MUSICRESY								4000
-//#define SONG_DURATION						180
+#define MUSIC_RESX								2000
+#define MUSIC_RESY								4000
+//#define MUSIC_DURATION						180
 
 
-#define SAMPLE_RATE 44100
-#define SAMPLE_TYPE float
-#define MAX_SAMPLES (SAMPLE_RATE*SONG_DURATION)
+#define MUSIC_SAMPLE_RATE 44100
+#define MUSIC_SAMPLE_TYPE float
+#define MUSIC_MAX_SAMPLES (MUSIC_SAMPLE_RATE*MUSIC_DURATION)
 
 
 #include <mmsystem.h>
 #include <mmreg.h>
 
 #pragma data_seg(".musicout")
-static float lpSoundBuffer[MUSICRESX * MUSICRESY * 2 *10];
+static float music_lpSoundBuffer[MUSIC_RESX * MUSIC_RESY * 2 *10];
 
-static HWAVEOUT hWaveOut;
+static HWAVEOUT music_hWaveOut;
 
 #pragma data_seg(".wavefmt")
-static WAVEFORMATEX WaveFMT = {
+static WAVEFORMATEX music_WaveFMT = {
 	WAVE_FORMAT_IEEE_FLOAT,
 	2,                                   // channels
-	SAMPLE_RATE,                         // samples per sec
-	SAMPLE_RATE*sizeof(SAMPLE_TYPE) * 2, // bytes per sec
-	sizeof(SAMPLE_TYPE) * 2,             // block alignment;
-	sizeof(SAMPLE_TYPE) * 8,             // bits per sample
+	MUSIC_SAMPLE_RATE,                         // samples per sec
+	MUSIC_SAMPLE_RATE*sizeof(MUSIC_SAMPLE_TYPE) * 2, // bytes per sec
+	sizeof(MUSIC_SAMPLE_TYPE) * 2,             // block alignment;
+	sizeof(MUSIC_SAMPLE_TYPE) * 8,             // bits per sample
 	0                                    // extension not needed
 };
 
 #pragma data_seg(".wavehdr")
-static WAVEHDR WaveHDR = {
-	(LPSTR)lpSoundBuffer, MAX_SAMPLES * sizeof(SAMPLE_TYPE) * 2, 0, 0, 0, 0, 0, 0
+static WAVEHDR music_WaveHDR = {
+	(LPSTR)music_lpSoundBuffer, MUSIC_MAX_SAMPLES * sizeof(MUSIC_SAMPLE_TYPE) * 2, 0, 0, 0, 0, 0, 0
 };
 
-static MMTIME MMTime = {
+static MMTIME music_MMTime = {
 	TIME_SAMPLES, 0
 };
 
 
-#define AUDIO_OFFSET
+#define MUSIC_OFFSET
 #if EDITOR
-	#define AUDIO_OFFSET + audio_offset_samples
-	static int audio_offset_samples = 0;
+	#define MUSIC_OFFSET + music_offset_samples
+	static int music_offset_samples = 0;
 #endif
 
 
-static __forceinline int audio_get_time_samples() {
-	waveOutGetPosition(hWaveOut, &MMTime, sizeof(MMTIME));
-	return MMTime.u.sample AUDIO_OFFSET;
+static __forceinline int music_get_time_samples() {
+	waveOutGetPosition(music_hWaveOut, &music_MMTime, sizeof(MMTIME));
+	return music_MMTime.u.sample MUSIC_OFFSET;
 }
 
-static __forceinline double audio_get_time_seconds() {
-	return double(audio_get_time_samples()) / double(44100);
+static __forceinline double music_get_time_seconds() {
+	return double(music_get_time_samples()) / double(44100);
 }
 
 
@@ -61,10 +61,10 @@ static __forceinline double audio_get_time_seconds() {
 void editor_start_timer();
 void editor_end_timer(const char* label);
 
-static void audio_render() { 
+static void music_render() { 
 	editor_start_timer();
 	OglUseProgram(PROG_MUSIC);
-	constexpr int samples_cnt = SAMPLE_RATE * SONG_DURATION; 
+	constexpr int samples_cnt = MUSIC_SAMPLE_RATE * MUSIC_DURATION; 
 	constexpr int bytes_per_samp = 4 * 2; // two f32
 
 	constexpr int local_thread_cnt = 256;
@@ -84,71 +84,76 @@ static void audio_render() {
 		for(int group_disp_idx = 0; group_disp_idx <= total_group_dispatches; group_disp_idx += group_disp_batch_cnt){
 			oglUniform1i(0, local_thread_cnt * group_disp_idx);
 			OglDispatchCompute(group_disp_batch_cnt, 1, 1);
-			float* cpu_write_ptr = &lpSoundBuffer[0];
+			float* cpu_write_ptr = &music_lpSoundBuffer[0];
 			//cpu_write_ptr += group_disp_idx * local_thread_cnt * 2;
 			//glFlush();
 			glFinish();
 		}
-		//oglGetNamedBufferSubData(ssbo, gpu_buff_start_offs_bytes, total_byte_count, &lpSoundBuffer);
+		//oglGetNamedBufferSubData(ssbo, gpu_buff_start_offs_bytes, total_byte_count, &music_lpSoundBuffer);
 #else
 		oglDispatchCompute(total_group_dispatches, 1, 1);
 #endif
-		oglGetNamedBufferSubData(ssbo, gpu_buff_start_offs_bytes, total_byte_count, &lpSoundBuffer);
+		oglGetNamedBufferSubData(ssbo, gpu_buff_start_offs_bytes, total_byte_count, &music_lpSoundBuffer);
 	editor_end_timer("audio reload\n");
 }
 
 
 
-static void __forceinline audio_init() { 
-	audio_render();
-	waveOutOpen(&hWaveOut, WAVE_MAPPER, &WaveFMT, NULL, 0, CALLBACK_NULL);
-	waveOutPrepareHeader(hWaveOut, &WaveHDR, sizeof(WaveHDR));
-	waveOutWrite(hWaveOut, &WaveHDR, sizeof(WaveHDR));
+static void __forceinline music_init() { 
+	music_render();
+	waveOutOpen(&music_hWaveOut, WAVE_MAPPER, &music_WaveFMT, NULL, 0, CALLBACK_NULL);
+	waveOutPrepareHeader(music_hWaveOut, &music_WaveHDR, sizeof(music_WaveHDR));
+	waveOutWrite(music_hWaveOut, &music_WaveHDR, sizeof(music_WaveHDR));
 }
 
-static void __forceinline audio_seek(double pos_secs) { 
+static void __forceinline music_seek(double pos_secs) { 
 #if EDITOR
-	waveOutReset(hWaveOut);
-	waveOutUnprepareHeader(hWaveOut,&WaveHDR,sizeof(WAVEHDR));
-	if(pos_secs >= SONG_DURATION - 0.5){
-		pos_secs = SONG_DURATION;
+	waveOutReset(music_hWaveOut);
+	waveOutUnprepareHeader(music_hWaveOut,&music_WaveHDR,sizeof(WAVEHDR));
+	if(pos_secs >= MUSIC_DURATION - 0.5){
+		pos_secs = MUSIC_DURATION;
 	}
 
-	SAMPLE_TYPE* buf = lpSoundBuffer;
-	audio_get_time_samples();
+	MUSIC_SAMPLE_TYPE* buf = music_lpSoundBuffer;
+	music_get_time_samples();
 	int new_time_samples = (pos_secs) * 44100;
 	buf += new_time_samples*2; // seek
-	audio_offset_samples = new_time_samples;
-	WaveHDR.lpData=(LPSTR)(buf);
-	WaveHDR.dwBufferLength=(MAX_SAMPLES - new_time_samples) * sizeof(SAMPLE_TYPE) * 2;
+	music_offset_samples = new_time_samples;
+	music_WaveHDR.lpData=(LPSTR)(buf);
+	music_WaveHDR.dwBufferLength=(MUSIC_MAX_SAMPLES - new_time_samples) * sizeof(MUSIC_SAMPLE_TYPE) * 2;
 
-	waveOutPrepareHeader(hWaveOut,&WaveHDR,sizeof(WAVEHDR));
-	waveOutWrite(hWaveOut,&WaveHDR,sizeof(WAVEHDR));
+	waveOutPrepareHeader(music_hWaveOut,&music_WaveHDR,sizeof(WAVEHDR));
+	waveOutWrite(music_hWaveOut,&music_WaveHDR,sizeof(WAVEHDR));
 #endif
 }
 
-static void __forceinline audio_mute(){
+static void __forceinline music_mute(){
 #if EDITOR
-		int samples_cnt = SAMPLE_RATE * SONG_DURATION;
+		int samples_cnt = MUSIC_SAMPLE_RATE * MUSIC_DURATION;
 		for(int i = 0; i < samples_cnt * 2; i++){
-			lpSoundBuffer[i] = 0;
+			music_lpSoundBuffer[i] = 0;
 		}
-		audio_seek(editor_time);
+		music_seek(editor_time);
     //DWORD volume = 0;
-    //waveOutSetVolume(hWaveOut, volume);
+    //waveOutSetVolume(music_hWaveOut, volume);
 #endif
 }
 
-static void __forceinline audio_unmute(){
+static void __forceinline music_unmute(){
 #if EDITOR
-		audio_render();
-		audio_seek(editor_time);
+		music_render();
+		music_seek(editor_time);
     //DWORD volume = 0xFFFF;
-    //waveOutSetVolume(hWaveOut, volume);
+    //waveOutSetVolume(music_hWaveOut, volume);
 #endif
 }
 
-void audio_save_wav() {
+#if EDITOR
+	void editor_print_to_console(const char* message);
+#endif
+
+
+void music_save_wav() {
 #if EDITOR
     FILE* file = fopen("song.wav", "wb");
     if (!file) {
@@ -182,21 +187,23 @@ void audio_save_wav() {
     wavHeader.subchunk1Size = 16;
     wavHeader.audioFormat = 3;  // IEEE Float PCM
     wavHeader.numChannels = 2;
-    wavHeader.sampleRate = SAMPLE_RATE;
+    wavHeader.sampleRate = MUSIC_SAMPLE_RATE;
     wavHeader.bitsPerSample = 32;
     wavHeader.blockAlign = (wavHeader.bitsPerSample / 8) * wavHeader.numChannels;
     wavHeader.byteRate = wavHeader.sampleRate * wavHeader.blockAlign;
-    wavHeader.subchunk2Size = MAX_SAMPLES * wavHeader.blockAlign;
+    wavHeader.subchunk2Size = MUSIC_MAX_SAMPLES * wavHeader.blockAlign;
     wavHeader.chunkSize = 36 + wavHeader.subchunk2Size;
 
     // Write WAV header
     fwrite(&wavHeader, sizeof(wavHeader), 1, file);
 
     // Write the sound buffer
-    fwrite(lpSoundBuffer, sizeof(SAMPLE_TYPE), MAX_SAMPLES * 2, file);
+    fwrite(music_lpSoundBuffer, sizeof(MUSIC_SAMPLE_TYPE), MUSIC_MAX_SAMPLES * 2, file);
 
     fclose(file);
-    MessageBox(NULL, "WAV file saved successfully!", "Success", MB_OK);
+
+		editor_print_to_console("----- WAV file created succesfully -----\n \n \n");
+    //MessageBox(NULL, "WAV file saved successfully!", "Success", MB_OK);
 #endif
 }
 

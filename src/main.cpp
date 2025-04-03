@@ -8,9 +8,11 @@
 #define ANTI_TDR											1
 #define LAPTOP_GPU_FIX								0
 
-#define FULLSCREEN										1
+#define FULLSCREEN										0
 #define AUTORES												0
-#define VSYNC													1
+#define VSYNC													0
+
+#define DO_PERFECT_FFMPEG_CAPTURE			1
 
 
 #if LAPTOP_GPU_FIX
@@ -24,8 +26,8 @@ extern "C" {
 #define YRES										720
 
 
-//#define SONG_DURATION						420
-#define SONG_DURATION						470
+//#define MUSIC_DURATION						420
+#define MUSIC_DURATION						470
 
 #define MUSICFB									framebuffers[0]
 #define PROG_RENDER							programs[0]
@@ -42,7 +44,7 @@ extern "C" {
 
 #pragma data_seg(".pids")
 	static int frame = 1;
-	static float audio_time;
+	static float music_time;
 	static int programs[3];
 	static HDC hDC;
 	static GLuint ssbo;
@@ -305,9 +307,9 @@ void entrypoint(void) {
 	init_resources();
 
 
-	audio_init();
+	music_init();
 
-	//audio_seek(85);
+	//music_seek(85);
 
 	do {
 	#if EDITOR
@@ -327,7 +329,7 @@ void entrypoint(void) {
 	#if OPENGL_DEBUG || EDITOR
 		true
 	#else
-		!GetAsyncKeyState(VK_ESCAPE) || audio_time > SONG_DURATION - 0.5
+		!GetAsyncKeyState(VK_ESCAPE) || music_time > MUSIC_DURATION - 0.5
 	#endif
 	);
 
