@@ -1,17 +1,17 @@
-#version 460 core
+#version 460
 
-// [
 layout(local_size_x=256,local_size_y=1,local_size_z=1) in;
-// ]
 
-layout(std430,binding=0) coherent buffer Aaa{uint hist[];};
+layout(std430,binding=0) coherent buffer Aa{uint hist[];};
 
 
 
 
 //layout(location = 0) uniform int iFrame;
 layout(location = 1) uniform float Tt;
-layout(location = 2) uniform vec2 R;
+//layout(location = 2) uniform vec2 R;
+
+const vec2 R = vec2(1280,720);
 
 float T;
 //layout(binding = 3) uniform sampler2D iChannel2;
@@ -37,32 +37,25 @@ vec3 hash_v3_s(float s){ return vec3(hash_f_s(s), hash_f_s(s), hash_f_s(s)); }
 vec3 hash_v3(){ return vec3(hash_f(), hash_f(), hash_f()); }
 
 
+/*
 vec2 sample_disk(){
     vec2 X = hash_v2();
     return vec2(sin(X.x*tau), cos(X.x*tau))*sqrt(X.y);
-}
+}*/
 
 // [
 #define pmod(p,amt) (mod((p+amt*0.5),amt)-amt*0.5)
 // ]
 
-
 mat2 rot(float a){return mat2(cos(a), -sin(a), sin(a), cos(a));}
-
-float quant(float a, float b){return floor(a*b)/b;}
-
-
-float hash_f_p_neg(float prob){
-    return float(hash_f() < prob)*2. - 1.;
-}
-
-
+float quant(float a, float b){return floor(a*b)/b;} // remove?
+float hash_f_p_neg(float prob){ return float(hash_f() < prob)*2. - 1.; }
 
 
 
 
 void main( ){
-    uint id = uint(gl_GlobalInvocationID.x); // to cast or not to cast?
+    uint id = gl_GlobalInvocationID.x; // to cast or not to cast?
     seed = id + 1111111u;
 
 	T = Tt;
@@ -73,8 +66,7 @@ void main( ){
 	//T -= hash_f()*10.*end;
 	//T = mod()
 
-
-	float repd = 0.5 + sin(T*0.5)*2./T;
+	float repd = .5 + sin(T*.5)*2./T;
 	float eenv = mod(T,repd);
 	eenv = exp(-eenv*4.);
 
@@ -108,25 +100,8 @@ void main( ){
 		+ 1.* smoothstep(90.,150.,T)
 	;
 
-
-	/*
-			if(T < 316){
-				p /= p.z * K_PERSP;
-			}
-	*/
 	if(T < 10.){
 		K_CUBE = false;
-	}
-
-	bool dbg = true;
-	if(dbg){
-		//K_CUBE = false;
-		
-		//K_OFFS = 0.2;
-		//K_ITERS = 20.;
-
-		//K_OFFS = 0.;
-		//K_ITERS = 120.;
 	}
 
     int iters = 30 + int(K_ITERS);
@@ -139,8 +114,8 @@ void main( ){
     vec3 p = vec3(0);
 	// startpos?
 
-    float focusDist = 0. + sin(T*9.)*4.*smoothstep(280.,280.1,T);
-    vec2 dofFac = vec2(100,0.00)*end * (1. -  smoothstep(314.,320.,T));
+    float focusDist = sin(T*9.)*4.*smoothstep(280.,280.1,T);
+    vec2 dofFac = vec2(100,0)*end * (1. -  smoothstep(314.,320.,T));
 
     vec3 tr = hash_v3();
     vec3 rb = hash_v3_s(floor(T));
@@ -241,7 +216,8 @@ void main( ){
 			p.x /= R.x/R.y;
 			q = p;
 
-			q.xy += sample_disk()*abs(q.z - focusDist)*0.05*dofFac;
+			//q.xy += sample_disk()*abs(q.z - focusDist)*0.05*dofFac;
+			q.xy += (hash_f()*2. - 1.)*abs(q.z - focusDist)*0.05*dofFac; // CAN BE MADE SMALLER
 		}
 
         

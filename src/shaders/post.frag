@@ -1,10 +1,13 @@
-#version 460 core
+#version 460
 
-layout(location = 0) uniform int F;
+//layout(location = 0) uniform int F;
 layout(location = 1) uniform float T;
-layout(location = 2) uniform vec2 R;
+//layout(location = 2) uniform vec2 R;
+
+const vec2 R = vec2(1280,720);
 
 layout(std430,binding=0) coherent buffer Aa{uint hist[];};
+
 
 out vec4 C;
 
@@ -31,12 +34,8 @@ uint get_hist_id(ivec2 c){
 
 
 
-vec3 mix_cols(float idx){
-	vec3[4] kCols = vec3[](
-		vec3(1,1,1), vec3(1,0,1), vec3(1,1,.1), vec3(.5,1,1)*1.5
-	);
-	return mix( kCols[int(idx)%4], kCols[int(idx + 1)%4], smoothstep(0.,1.,fract(idx)) );
-}
+//vec3 mix_cols(float idx){
+//}
 
 /*
 float sdb( in vec2 p, in vec2 a, in vec2 b, float th ){
@@ -49,6 +48,10 @@ float sdb( in vec2 p, in vec2 a, in vec2 b, float th ){
 } */
 
 
+
+
+
+float draw_char(inout vec2 p, inout float sd, int char_idx, int char_cnt){
 int[148] chars = int[](
     // C 0 4
     -1,-1,-1,1,
@@ -109,9 +112,6 @@ int[148] chars = int[](
     
 );
 
-
-
-float draw_char(inout vec2 p, inout float sd, int char_idx, int char_cnt){
     float th = 0.2;
     for(int i = char_idx; ++i < char_cnt + char_idx;){
 		vec2 a = vec2(chars[i*4], chars[i*4 + 1]);
@@ -168,7 +168,11 @@ void main( ){
 
 	// tonemap
 	vec3 col = vec3(hist[hist_id]) * 0.0001;
-	vec3 pal = mix_cols(col.x*115.*4.);
+	float pal_idx = col.x*115.*4.;
+	vec3[4] kCols = vec3[](
+		vec3(1,1,1), vec3(1,0,1), vec3(1,1,.1), vec3(.5,1,1)*1.5
+	);
+	vec3 pal = mix( kCols[int(pal_idx)%4], kCols[int(pal_idx + 1)%4], smoothstep(0.,1.,fract(pal_idx)) );
 	col = col/(1.+col);
 	if(hash_f_s(floor(T*0.8))<0.7){
 		col = 1.- col;
@@ -191,7 +195,8 @@ void main( ){
 
 	//col = mix(col, hash_v3(), smoothstep(460.,461.,T));
 
-	C = vec4(pow(abs(col), vec3(2./0.45)),1);
+	C = pow(abs(col.xyzz), vec4(2./0.45));
+	//C = vec4(pow(abs(col), vec3(2./0.45)),1);
 
 
 	if(T > 460.){
@@ -203,7 +208,7 @@ void main( ){
 	} else {
 		if (col.x < 0.0 + K_GLITCH){
 			ivec2 offs = -ivec2(0, 4);
-			seed += F; // ???????
+			//seed += F; // ???????
 			offs *= ((int(hash_f() < col.x*1111.))*2 - 1)*(1 + 5*int(hash_f_s(floor(T))));
 			offs *= int(hash_f_s(floor(T) * 124.)*2.)*2 - 1;
 			offs *= 1 + int(endb * smoothstep(3.,0.,mod(T,4.))*20.);
@@ -230,37 +235,41 @@ void main( ){
 
 
 	uv = (gl_FragCoord.xy - R.xy/2.)/R.y;
-    float sd = 1000.;
+	uv *= 20.;
+
+    float sd = 2.;
 	//uv.x += 0.6;
 	//uv *= 20.;
 	
-	uv *= 20.;
 
-	if(T > 420 && T < 450){
-		int char_idx = int(T)%3;
-		//char_idx = 2;
-		if(char_idx == 0){
-			uv.x += 20./5. - 0.25;
-			draw_char(uv,  sd, 0, 4); // C
-			draw_char(uv,  sd, 4, 5); // A
-			draw_char(uv,  sd, 9, 4); // N
-			draw_char(uv,  sd, 13, 3);// T
-		} else if (char_idx == 1){
-			uv.x += 20./13.5 - 0.25;
-			draw_char(uv,  sd, 16, 6); // G
-			draw_char(uv,  sd, 22, 5); // O
-		} else{
-			uv.x += 20./5. - 0.25;
-			draw_char(uv,  sd, 27, 6); // B
-			draw_char(uv,  sd, 4, 5); // A
-			draw_char(uv,  sd, 0, 4); // C
-			draw_char(uv,  sd, 33, 4); // K
-		}
-		if(sd < 0.){
-			//hist[hist_id] = 1 - hist[hist_id]*500000;
-			hist[hist_id] += 100000;
-			//hist[hist_id] = -1u;
-		}
+	
+	//int char_idx = int(T)%3;
+	float char_idx = int(T)%3;
+	//char_idx = 2;
+	if(char_idx == 0){
+		uv.x += 3.75; // can be smaller
+		draw_char(uv,  sd, 0, 4); // C
+		draw_char(uv,  sd, 4, 5); // A
+		draw_char(uv,  sd, 9, 4); // N
+		draw_char(uv,  sd, 13, 3);// T
+	} 
+	if (char_idx == 1){
+		uv.x += 20./13.5 - 0.25; // can be smaller
+		draw_char(uv,  sd, 16, 6); // G
+		draw_char(uv,  sd, 22, 5); // O
+	} 
+	if (char_idx == 2){
+		uv.x += 3.75;
+		draw_char(uv,  sd, 27, 6); // B
+		draw_char(uv,  sd, 4, 5); // A
+		draw_char(uv,  sd, 0, 4); // C
+		draw_char(uv,  sd, 33, 4); // K
+	}
+	if(sd < 0. + float(T < 420 || T > 450)*10000.){
+	
+		//hist[hist_id] = 1 - hist[hist_id]*500000;
+		hist[hist_id] += 100000;
+		//hist[hist_id] = -1u;
 	}
 }
 

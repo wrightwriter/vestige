@@ -1,15 +1,14 @@
-#version 460 core
+#version 460
 
 layout(local_size_x=256,local_size_y=1,local_size_z=1) in;
 
-layout(std430,binding=0) buffer A{vec2 hist[];};
+layout(std430,binding=0) buffer Aa{vec2 hist[];};
+//layout(std430,binding=0) coherent buffer Aa{uint hist[];};
 
 //#define ANTI_TDR
 //#ifdef ANTI_TDR
 layout(location = 0) uniform int offs;
 //#endif
-
-
 
 
 const float pi = acos(-1.);
@@ -44,7 +43,6 @@ float ntf(float n){return 440.*pow(2.,n/12.);}
 mat2 rot(float t) { return mat2(cos(t), -sin(t), sin(t), cos(t)); }
 
 
-
 // == noise ========================================================================================
 vec3 cyclic(vec3 p, float pers, float lacu) {
   vec4 sum = vec4(0);
@@ -69,22 +67,22 @@ vec3 cyclic(vec3 p, float pers, float lacu) {
 
 
 void main(){
-	uint samp = gl_GlobalInvocationID.x;
-//#ifdef ANTI_TDR
-	samp += uint(offs);
-//#endif
+    uint repd = 44100*12;
+
+	uint samp = gl_GlobalInvocationID.x + uint(offs); // cast needed?
 
 	vec2 s = vec2(0);
+//#ifdef ANTI_TDR
+//#endif
+
 	float T = float(samp) / 44100.;
 	float Tt = T;
 
 	//float interp = 
 
-    uint repd = 44100*12;
     float TT = float(samp%repd)/44100.;
-
-
 	float outro = smoothstep(430.,470.,Tt);
+	float genv = 1.;
 
 	if(T> 280.0){
 		float t = mod(T, 4.);
@@ -99,7 +97,6 @@ void main(){
 		//s += exp()
 	}
 
-	float genv = 1.;
 	if(T > 250.){
 	//if(true){
 		float md = 2. + sin(T)*0.0002;
@@ -128,20 +125,21 @@ void main(){
 	}
 
     
-    float its = 400.;
+    float its = 1000.;
      
     //float[4] notes = float[](0.,3.,5.,10.);
     float[4] notes = float[](0. - 12.,1.,3.,10.);
 
     //its = 10. + smoothstep(0.,1.,T)*40.;
-    its = 1000.;
 
+	/*
 	vec2 outro_mw = 
 		-pow(outro,35.) * (
 			cyclic(0.2*vec3(vec2(sin(T),cos(T)),10.*T), 0.2, 0.3).xy*30.*40.
 
 		);
 	outro_mw -= outro_mw;
+	*/
 	
 	vec2 chord = vec2(0);
 	{ // SINE CHORD
@@ -205,7 +203,7 @@ void main(){
 				+sin(h(i*2.4 + tid).x*15.*TT)*4. * smoothstep(10.,20.,T) // chorus
 				+ sin(tau * g * TT*2.)*env*env*env*0.6 * smoothstep(20.,60.,T)  // fm
 
-				- outro_mw
+				//- outro_mw
 				//- pow(outro,65.)* cyclic(vec3(vec2(sin(t),cos(t)),i)*100., 1., 1.).xy*30.*100000.
 				//- pow(outro,65.)* cyclic(vec3(vec2(sin(t),cos(t)),10.*t)*100., 1., 1.).xy*30.*100000.
 			  )
@@ -253,9 +251,6 @@ void main(){
 			}
 		}
 
-
-        
-        //float t = 
         float repd = 0.5 + sin(t*0.5)*2./t * smoothstep(10.,20.,T);
 
         repd = mix(10.,repd,smoothstep(0.,60.,T)) ;
@@ -272,7 +267,6 @@ void main(){
             n
         );
         
-        
         f -= 12. * float(hash3f(vec3(tid)).x < 0.2);
         
         float env = smoothstep(0.,0.004,tt) * exp(-tt*10.);
@@ -285,9 +279,6 @@ void main(){
             float q = tt*0.0;
             s += (7.*env*sin((TT)*f*tau  + fmwave + cyclic(vec3(vec2(sin(q),cos(q)),i), 1., 1.).xy*30.))/its*vol;
         }
-        //s += env*sin((t)*f*tau );
-    
-     //cyclic(vec3 p, float pers, float lacu) 
     }
     
     
@@ -406,5 +397,4 @@ void main(){
  
 
 	hist[samp + 3000000] = s*genv + tanh(chord*outro*0.2 + sin(tau*30.*Tt)*10. * pow(outro,30.));
-			
 }

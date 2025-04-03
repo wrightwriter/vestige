@@ -38,6 +38,9 @@
 #define oglGetNamedBufferSubData ((PFNGLGETNAMEDBUFFERSUBDATAPROC)wglGetProcAddress("glGetNamedBufferSubData"))
 
 
+// oglUniform1f
+// oglDispatchCompute
+
 
 // declare this symbol if your code uses floating point types
 //extern "C" int _fltused;

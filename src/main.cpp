@@ -23,6 +23,7 @@ extern "C" {
 #define XRES										1280
 #define YRES										720
 
+
 //#define SONG_DURATION						420
 #define SONG_DURATION						470
 
@@ -38,16 +39,32 @@ extern "C" {
 #include "timeapi.h"
 #include "shaders/all_shaders.h"
 
+
 #pragma data_seg(".pids")
 	static int frame = 1;
 	static float audio_time;
 	static int programs[3];
 	static HDC hDC;
 	static GLuint ssbo;
+	static PFNGLUSEPROGRAMPROC OglUseProgram;
+	static PFNGLUNIFORM1IPROC OglUniform1i;
+	static PFNGLUNIFORM1FPROC OglUniform1f;
+	static PFNGLDISPATCHCOMPUTEPROC OglDispatchCompute;
+	static PFNGLCREATESHADERPROGRAMVPROC OglCreateShaderProgramv;
+
+
+
+//#define oglDispatchCompute ((PFNGLDISPATCHCOMPUTEPROC)wglGetProcAddress("glDispatchCompute"))
 	//static GLuint textures[6];
 	//static GLuint framebuffers[6];
-	static int xres;
-	static int yres;
+	//static int xres;
+	//static int yres;
+
+	static constexpr int xres = XRES;
+	static constexpr int yres = YRES;
+
+		//xres = XRES; 
+		//yres = YRES;
 
 #include "debug.h"
 #include "music.h"
@@ -98,8 +115,6 @@ static void __forceinline init_window() {
 		xres = GetSystemMetrics(SM_CXSCREEN);
 		yres = GetSystemMetrics(SM_CYSCREEN);
 	#else
-		xres = XRES; 
-		yres = YRES;
 		//xres_real = GetSystemMetrics(SM_CXSCREEN); 
 		//yres_real = GetSystemMetrics(SM_CYSCREEN);
 	#endif
@@ -210,6 +225,18 @@ static void __forceinline init_window() {
 	SetPixelFormat(hDC, ChoosePixelFormat(hDC, &pfd), &pfd);
 	wglMakeCurrent(hDC, wglCreateContext(hDC));
 
+	OglUseProgram = ((PFNGLUSEPROGRAMPROC)wglGetProcAddress("glUseProgram"));
+	OglUniform1i = ((PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i"));
+	OglUniform1f = ((PFNGLUNIFORM1FPROC)wglGetProcAddress("glUniform1f"));
+	OglDispatchCompute = ((PFNGLDISPATCHCOMPUTEPROC)wglGetProcAddress("glDispatchCompute"));
+	OglCreateShaderProgramv = ((PFNGLCREATESHADERPROGRAMVPROC)wglGetProcAddress("glCreateShaderProgramv"));
+
+//oglCreateShaderProgramv
+
+//#define oglUseProgram //#define 
+// 
+//#define oglDispatchCompute 
+
 	//SetWindowPos(hwnd, HWND_TOPMOST,0, -titleBarHeight - 200, windowWidth + 100, windowHeight + 100, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE);
 
 	//auto disp_settings = ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
@@ -253,7 +280,7 @@ static int __forceinline add_program(unsigned int program_type, const char* str,
 		shaders_count++;
 		return oglCreateShaderProgramv(program_type, 1, &str);
 	#else
-		return oglCreateShaderProgramv(program_type, 1, &str);
+		return OglCreateShaderProgramv(program_type, 1, &str);
 	#endif
 }
 
@@ -271,6 +298,8 @@ void entrypoint(void) {
 //int main(){
 //void entrypoint(void) {
 
+
+
 	init_window();
 	init_shaders();
 	init_resources();
@@ -278,7 +307,7 @@ void entrypoint(void) {
 
 	audio_init();
 
-	audio_seek(85);
+	//audio_seek(85);
 
 	do {
 	#if EDITOR
@@ -307,3 +336,5 @@ void entrypoint(void) {
 	#endif
 	ExitProcess(0);
 }
+
+

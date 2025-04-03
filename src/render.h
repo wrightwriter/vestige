@@ -75,11 +75,11 @@ static void __forceinline main_loop() {
 	//glViewport(0,0,xres, yres);
 	//glViewport(0,0,1280, 720);
 	{
-		oglUseProgram(PROG_RENDER);
+		OglUseProgram(PROG_RENDER);
 		//oglUniform1i(0, frame);
-		oglUniform1f(1, audio_time);
-		oglUniform2f(2, xres, yres);
-		oglDispatchCompute(64 * 64 * 2 / 16*2, 1, 1);
+		OglUniform1f(1, audio_time);
+		//oglUniform2f(2, xres, yres);
+		OglDispatchCompute(64 * 64 * 2 / 16*2, 1, 1);
 		frame += 1;
 	}
 	{
@@ -88,10 +88,10 @@ static void __forceinline main_loop() {
 		//oglBindFramebuffer(GL_FRAMEBUFFER, framebuffers[0]);
 		// glDrawBuffer(GL_BACK);
 
-		oglUseProgram(PROG_POST);
+		OglUseProgram(PROG_POST);
 		oglUniform1i(0, frame);
-		oglUniform1f(1, audio_time);
-		oglUniform2f(2, xres, yres);
+		OglUniform1f(1, audio_time);
+		//oglUniform2f(2, xres, yres);
 		glRects(-1, -1, 1, 1);
 	}
 

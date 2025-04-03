@@ -10,6 +10,7 @@
 #define SAMPLE_TYPE float
 #define MAX_SAMPLES (SAMPLE_RATE*SONG_DURATION)
 
+
 #include <mmsystem.h>
 #include <mmreg.h>
 
@@ -55,12 +56,14 @@ static __forceinline double audio_get_time_seconds() {
 	return double(audio_get_time_samples()) / double(44100);
 }
 
+
+
 void editor_start_timer();
 void editor_end_timer(const char* label);
 
 static void audio_render() { 
 	editor_start_timer();
-	oglUseProgram(PROG_MUSIC);
+	OglUseProgram(PROG_MUSIC);
 	constexpr int samples_cnt = SAMPLE_RATE * SONG_DURATION; 
 	constexpr int bytes_per_samp = 4 * 2; // two f32
 
@@ -80,7 +83,7 @@ static void audio_render() {
 
 		for(int group_disp_idx = 0; group_disp_idx <= total_group_dispatches; group_disp_idx += group_disp_batch_cnt){
 			oglUniform1i(0, local_thread_cnt * group_disp_idx);
-			oglDispatchCompute(group_disp_batch_cnt, 1, 1);
+			OglDispatchCompute(group_disp_batch_cnt, 1, 1);
 			float* cpu_write_ptr = &lpSoundBuffer[0];
 			//cpu_write_ptr += group_disp_idx * local_thread_cnt * 2;
 			//glFlush();
