@@ -94,6 +94,9 @@ void dbg_validate_shaders(){
 	static LARGE_INTEGER editor_timer_start, editor_timer_freq;
 	static float editor_average_ms = 0.;
 
+	FILE* ffmpeg = nullptr;
+	static bool editor_is_recording = false;
+
 	#define key_space_down  keys_pressed[0]
 	#define key_left_down  keys_pressed[1]
 	#define key_right_down  keys_pressed[2]
@@ -101,6 +104,7 @@ void dbg_validate_shaders(){
 	#define key_aaaaa_down  keys_pressed[4]
 	#define key_s_down  keys_pressed[5]
 	#define key_l_down keys_pressed[6]
+	#define key_r_down keys_pressed[7]
 
 	void editor_create_console() {
 		QueryPerformanceFrequency(&editor_timer_freq);
@@ -157,6 +161,9 @@ void dbg_validate_shaders(){
 							}
 							if (wParam == 'L') {
 								key_l_down = true;
+							}
+							if (wParam == 'R') {
+								key_r_down = true;
 							}
 							break;
 			}
@@ -449,9 +456,95 @@ void editor_do_loop_popup(const char* title) {
 }
 
 
+// Read OpenGL framebuffer and send to FFMPEG
+void captureFrame() {
+	// PBOs for non-blocking readback
+	static GLuint pboIds[2] = { 0, 0 };
+	static int pboIndex = 0;
+	static bool pboInitialized = false;
+
+	if(!pboInitialized){
+		oglGenBuffers(2, pboIds); // Generate 2 PBOs for double-buffering
+		for (int i = 0; i < 2; i++) {
+				oglBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[i]);
+				oglBufferData(GL_PIXEL_PACK_BUFFER, xres * yres * 3, NULL, GL_STREAM_READ);
+		}
+		oglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		pboInitialized = true;
+	}
+	{
+    int nextIndex = (pboIndex + 1) % 2; // Swap PBOs
+    glReadBuffer(GL_BACK);
+
+    // Bind new PBO and read pixels into it asynchronously
+    oglBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[pboIndex]);
+    glReadPixels(0, 0, xres, yres, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+    // Process previous PBO
+    oglBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[nextIndex]);
+    unsigned char* pixels = (unsigned char*)oglMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+		if (pixels) {
+			fwrite(pixels, 1, xres * yres * 3, ffmpeg); // Directly write without flipping
+			oglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+    }
+    //if (pixels) {
+    //    // Flip image vertically (since OpenGL has bottom-left origin)
+    //    unsigned char* flippedPixels = (unsigned char*)malloc(xres * yres * 3);
+    //    for (int y = 0; y < yres; y++) {
+    //        memcpy(flippedPixels + (yres - 1 - y) * xres * 3, pixels + y * xres * 3, xres * 3);
+    //    }
+
+    //    fwrite(flippedPixels, 1, xres * yres * 3, ffmpeg);
+    //    free(flippedPixels);
+
+    //    oglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+    //}
+    oglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    pboIndex = nextIndex; // Swap buffers
+	}
+}
+
+
 static void __forceinline do_editor_stuff(){
 	// Focus main window
 #if EDITOR
+	if(key_r_down){
+		if(!editor_is_recording){
+			//ffmpeg = _popen(
+			//		"ffmpeg -y -f rawvideo -pixel_format rgb24 -video_size 1280x720 -r 60 -i - " // HARDCODED RESOLUTION
+			//		"-c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p output.mp4",
+			//		"wb"
+			//);
+			ffmpeg = _popen(
+				"ffmpeg -y "                                // Overwrite output file if it exists
+				"-f rawvideo "                              // Input format: raw pixel data
+				"-pixel_format rgb24 "                      // Pixel format: 24-bit RGB (8 bits per channel)
+				"-video_size 1280x720 "                     // Input resolution (must match OpenGL framebuffer)
+				"-r 60 "                                    // Frame rate: 30 FPS
+				"-i - "                                     // Read input from stdin (piped from our program)
+				"-vf vflip "                                // Flip the image vertically (fix OpenGL bottom-to-top issue)
+				"-c:v libx264 "                             // Use H.264 codec for video compression
+				"-preset fast "                             // Optimize for faster encoding
+				"-crf 18 "                                  // Quality setting (lower = better, 18 = visually lossless)
+				"-pix_fmt yuv420p "                         // Convert RGB to YUV 4:2:0 for playback compatibility
+				"output.mp4",                               // Output file name
+				"wb"
+			);
+			if (!ffmpeg) {
+					MessageBox(NULL, "Failed to start FFMPEG!", "Error", MB_ICONERROR);
+					//return 1;
+			}
+			editor_is_recording = true;
+		} else {
+			_pclose(ffmpeg);
+			editor_is_recording = false;
+		}
+	}
+
+	if(editor_is_recording){
+		captureFrame();
+	}
+
 	double audio_time = audio_get_time_seconds();
 
 	// --- Toggle gui

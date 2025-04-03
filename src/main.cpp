@@ -1,9 +1,9 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
-#define EDITOR												0
+#define EDITOR												1
 #define EDITOR_FORCE_RELOAD_FROM_DISK	0
 #define VALIDATE_SHADERS_GLSLANG			0
-#define OPENGL_DEBUG									0
+#define OPENGL_DEBUG									1
 
 #define ANTI_TDR											1
 #define LAPTOP_GPU_FIX								0
@@ -212,7 +212,7 @@ static void __forceinline init_window() {
 				hwnd = 
 			#endif
 			#if EDITOR
-				CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2 + 600, windowY - yres/2 - 100, xres, yres, 0, 0, hInstance, 0)
+				CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
 				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
 				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
 				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_BORDER | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
@@ -330,6 +330,7 @@ void entrypoint(void) {
 		!GetAsyncKeyState(VK_ESCAPE) || audio_time > SONG_DURATION - 0.5
 	#endif
 	);
+
 
 	#if EDITOR
 		FreeConsole();  // Detach the console

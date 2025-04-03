@@ -89,7 +89,7 @@ static void __forceinline main_loop() {
 		// glDrawBuffer(GL_BACK);
 
 		OglUseProgram(PROG_POST);
-		oglUniform1i(0, frame);
+		//oglUniform1i(0, frame); // unused
 		OglUniform1f(1, audio_time);
 		//oglUniform2f(2, xres, yres);
 		glRects(-1, -1, 1, 1);

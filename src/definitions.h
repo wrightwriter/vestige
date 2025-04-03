@@ -36,6 +36,14 @@
 #define oglNamedBufferStorage ((PFNGLNAMEDBUFFERSTORAGEPROC)wglGetProcAddress("glNamedBufferStorage"))
 #define oglBindBufferBase ((PFNGLBINDBUFFERBASEPROC)wglGetProcAddress("glBindBufferBase"))
 #define oglGetNamedBufferSubData ((PFNGLGETNAMEDBUFFERSUBDATAPROC)wglGetProcAddress("glGetNamedBufferSubData"))
+#define oglGenBuffers ((PFNGLGENBUFFERSPROC)wglGetProcAddress("glGenBuffers"))
+#define oglBindBuffer ((PFNGLBINDBUFFERPROC)wglGetProcAddress("glBindBuffer"))
+#define oglBufferData ((PFNGLBUFFERDATAPROC)wglGetProcAddress("glBufferData"))
+#define oglMapBuffer ((PFNGLMAPBUFFERPROC)wglGetProcAddress("glMapBuffer"))
+#define oglUnmapBuffer ((PFNGLUNMAPBUFFERPROC)wglGetProcAddress("glUnmapBuffer"))
+
+
+
 
 
 // oglUniform1f

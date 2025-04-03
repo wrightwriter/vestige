@@ -250,8 +250,6 @@ static const char* post_frag =
      "f.x+=20./13.5-.25,c(f,p,16,6),c(f,p,22,5);"
    "if(v==2)"
      "f.x+=3.75,c(f,p,27,6),c(f,p,4,5),c(f,p,0,4),c(f,p,33,4);"
-   "if(p<float(T<420||T>450)*1e4)"
-     "i[z]+=100000;"
  "}";
 
 static const char* render_comp =
