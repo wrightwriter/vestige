@@ -242,7 +242,7 @@ static const char* post_frag =
    "if(T>350.)"
      "C=vec4(dot(C,C)<.5);"
    "f=(gl_FragCoord.xy-u.xy/2.)/u.y*20.;"
-   "p=2.;"
+   "p=10.;"
    "v=int(T)%3;"
    "if(v==0)"
      "f.x+=3.75,c(f,p,0,4),c(f,p,4,5),c(f,p,9,4),c(f,p,13,3);"
@@ -250,6 +250,8 @@ static const char* post_frag =
      "f.x+=20./13.5-.25,c(f,p,16,6),c(f,p,22,5);"
    "if(v==2)"
      "f.x+=3.75,c(f,p,27,6),c(f,p,4,5),c(f,p,0,4),c(f,p,33,4);"
+   "if(p<0.&&(T>420&&T<450))"
+     "i[z]+=100000;"
  "}";
 
 static const char* render_comp =

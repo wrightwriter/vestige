@@ -1,39 +1,31 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
-#define EDITOR												1
+#define EDITOR												0
 #define EDITOR_FORCE_RELOAD_FROM_DISK	0
 #define VALIDATE_SHADERS_GLSLANG			0
-#define OPENGL_DEBUG									1
+#define OPENGL_DEBUG									0
 
 #define ANTI_TDR											1
 #define LAPTOP_GPU_FIX								0
 
-#define FULLSCREEN										0
+#define FULLSCREEN										1
 #define AUTORES												0
-#define VSYNC													0
+#define VSYNC													1
 
-#define DO_PERFECT_FFMPEG_CAPTURE			1
-
-
-#if LAPTOP_GPU_FIX
-extern "C" {
-	__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
-	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
-}
-#endif
-
-#define XRES										1280
-#define YRES										720
+#define DO_PERFECT_FFMPEG_CAPTURE			0
 
 
-//#define MUSIC_DURATION						420
-#define MUSIC_DURATION						470
+#define XRES													1280
+#define YRES													720
 
-#define MUSICFB									framebuffers[0]
-#define PROG_RENDER							programs[0]
-#define PROG_POST								programs[1]
-#define PROG_MUSIC							programs[2]
 
+//#define MUSIC_DURATION							420
+#define MUSIC_DURATION								470
+
+#define MUSICFB												framebuffers[0]
+#define PROG_RENDER										programs[0]
+#define PROG_POST											programs[1]
+#define PROG_MUSIC										programs[2]
 
 
 #include "definitions.h"
@@ -149,7 +141,7 @@ static void __forceinline init_window() {
 		// if(disp_settings == -2){
 		// 	MessageBox(NULL, "error", "error", 0x00000000L);
 		// }
-		//ShowCursor(0);
+		ShowCursor(0);
 		//hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE | WS_MAXIMIZE, 0, 0, xres, yres, 0, 0, 0, 0));
 
 		#if EDITOR
@@ -329,7 +321,7 @@ void entrypoint(void) {
 	#if OPENGL_DEBUG || EDITOR
 		true
 	#else
-		!GetAsyncKeyState(VK_ESCAPE) || music_time > MUSIC_DURATION - 0.5
+		! (GetAsyncKeyState(VK_ESCAPE) || music_time > float(MUSIC_DURATION) - 0.5)
 	#endif
 	);
 

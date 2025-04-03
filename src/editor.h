@@ -460,6 +460,7 @@ void editor_do_loop_popup(const char* title) {
 
 // Read OpenGL framebuffer and send to FFMPEG
 void editor_ffmpeg_capture_frame() {
+#if EDITOR
 	// PBOs for non-blocking readback
 	static GLuint pboIds[2] = { 0, 0 };
 	static int pboIndex = 0;
@@ -505,6 +506,7 @@ void editor_ffmpeg_capture_frame() {
     oglBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     pboIndex = nextIndex; // Swap buffers
 	}
+#endif
 }
 
 

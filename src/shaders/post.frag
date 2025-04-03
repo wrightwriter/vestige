@@ -237,7 +237,7 @@ void main( ){
 	uv = (gl_FragCoord.xy - R.xy/2.)/R.y;
 	uv *= 20.;
 
-    float sd = 2.;
+    float sd = 10.;
 	//uv.x += 0.6;
 	//uv *= 20.;
 	
@@ -265,8 +265,8 @@ void main( ){
 		draw_char(uv,  sd, 0, 4); // C
 		draw_char(uv,  sd, 33, 4); // K
 	}
-	//if(sd < 0. + float(T < 420 || T > 450)*10000.){
-	if(false){
+	if(sd < 0. && (T > 420 && T < 450)){
+	//if(false){
 	
 		//hist[hist_id] = 1 - hist[hist_id]*500000;
 		hist[hist_id] += 100000;

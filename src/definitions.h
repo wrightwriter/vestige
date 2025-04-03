@@ -11,6 +11,13 @@
 #include <GL/gl.h>
 
 
+#if LAPTOP_GPU_FIX
+extern "C" {
+	__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
 #define oglCreateFramebuffers ((PFNGLCREATEFRAMEBUFFERSPROC)wglGetProcAddress("glCreateFramebuffers"))
 #define oglNamedFramebufferDrawBuffers ((PFNGLNAMEDFRAMEBUFFERDRAWBUFFERSPROC)wglGetProcAddress("glNamedFramebufferDrawBuffers"))
 #define oglDispatchCompute ((PFNGLDISPATCHCOMPUTEPROC)wglGetProcAddress("glDispatchCompute"))
