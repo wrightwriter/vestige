@@ -88,6 +88,8 @@ void dbg_validate_shaders(){
 	static bool keys_pressed[20] = {};
 	static bool paused = false;
 
+	static bool editor_finished = false;
+
 	static float editor_loop_start = 0;
 	static float editor_loop_end = MUSIC_DURATION - 0.002;
 	static bool editor_loop_popup_finished = false;
@@ -561,9 +563,10 @@ static void __forceinline do_editor_stuff(){
 				"-g 120 "                                   // Keyframe interval for YouTube (2 seconds at 60 FPS)
 				"-c:a aac "                                 // Audio codec: AAC
 				"-b:a 320k "                                // Audio bit rate: 320 kbps
-				"-ar 48000 "                                // Audio sample rate: 48 kHz
+				//"-ar 48000 "                                // Audio sample rate: 48 kHz
+				"-ar 44100 "                                // Audio sample rate: 48 kHz
 
-				"outputb.mp4",                               // Output file name
+				"outputc.mp4",                               // Output file name
 				"wb"
 			);
 			if (!ffmpeg) {

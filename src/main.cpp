@@ -1,6 +1,6 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
-#define EDITOR												0
+#define EDITOR												1
 #define EDITOR_FORCE_RELOAD_FROM_DISK	0
 #define VALIDATE_SHADERS_GLSLANG			0
 #define OPENGL_DEBUG									0
@@ -8,11 +8,11 @@
 #define ANTI_TDR											1
 #define LAPTOP_GPU_FIX								0
 
-#define FULLSCREEN										1
+#define FULLSCREEN										0
 #define AUTORES												0
 #define VSYNC													1
 
-#define DO_PERFECT_FFMPEG_CAPTURE			0
+#define DO_PERFECT_FFMPEG_CAPTURE			1
 
 
 #define XRES													1280
@@ -319,7 +319,8 @@ void entrypoint(void) {
 		SwapBuffers(hDC);
 	} while (
 	#if OPENGL_DEBUG || EDITOR
-		true
+		//true
+		!editor_finished
 	#else
 		! (GetAsyncKeyState(VK_ESCAPE) || music_time > float(MUSIC_DURATION) - 0.5)
 	#endif
