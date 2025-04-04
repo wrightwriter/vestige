@@ -550,8 +550,8 @@ static void __forceinline do_editor_stuff(){
 				#if DO_PERFECT_FFMPEG_CAPTURE
 					"-i song.wav "  // Input WAV file
 				#endif
-				//"-vf vflip "                                // Flip the image vertically (fix OpenGL bottom-to-top issue)
-				"-vf scale=3840:2160:flags=lanczos,vflip "  // Upscale to 4K with Lanczos filter and flip the image
+				"-vf vflip "                                // Flip the image vertically (fix OpenGL bottom-to-top issue)
+				//"-vf scale=3840:2160:flags=lanczos,vflip "  // Upscale to 4K with Lanczos filter and flip the image
 				"-c:v libx264 "                             // Use H.264 codec for video compression
 				"-preset fast "                             // Optimize for faster encoding
 

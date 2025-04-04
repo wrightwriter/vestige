@@ -8,7 +8,7 @@
 #define ANTI_TDR											1
 #define LAPTOP_GPU_FIX								0
 
-#define FULLSCREEN										0
+#define FULLSCREEN										1
 #define AUTORES												0
 #define VSYNC													1
 
