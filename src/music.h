@@ -62,6 +62,7 @@ void editor_start_timer();
 void editor_end_timer(const char* label);
 
 static void music_render() { 
+	editor_print_to_console("------ Begin audio rerender -------\n\n");
 	editor_start_timer();
 	OglUseProgram(PROG_MUSIC);
 	constexpr int samples_cnt = MUSIC_SAMPLE_RATE * MUSIC_DURATION; 

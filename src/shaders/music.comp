@@ -1,14 +1,9 @@
 #version 460
 
- // 0. * something
- // removing dots <- remove dots for desktop gl
- // Array length inference 
- // "s=r(s+12.*float(T>60.)-12.-12.);"
 
+layout(local_size_x=256) in;
 
-layout(local_size_x=256,local_size_y=1,local_size_z=1) in;
-
-layout(std430,binding=0) buffer Aa{vec2 hist[];};
+layout(std430,binding=0)buffer Aa{vec2 hist[];};
 //layout(std430,binding=0) coherent buffer Aa{uint hist[];};
 
 //#define ANTI_TDR
@@ -16,9 +11,7 @@ layout(std430,binding=0) buffer Aa{vec2 hist[];};
 layout(location = 0) uniform int offs;
 //#endif
 
-
-float pi = acos(-1.);
-float tau = 2.*pi;
+float tau = 2.*acos(-1.); // can minify
 
 uvec3 hash3u(uvec3 v) {
   v = v * 1664525u + 1013904223u;
@@ -78,6 +71,7 @@ void main(){
 	uint samp = gl_GlobalInvocationID.x + uint(offs); // cast needed?
 
 	vec2 s = vec2(0);
+    vec2 qq = vec2(0);
 //#ifdef ANTI_TDR
 //#endif
 
@@ -121,9 +115,8 @@ void main(){
 			//smoothstep(0.,0.2,mod(-T , md)) 
 			//* smoothstep(md,md - .04,mod(-T , md))
 			smoothstep(0.,md*0.04,mt) 
-			* smoothstep(md,md*0.98,mt)
-			;
-		genv *= 4.;
+			* smoothstep(md,md*0.98,mt);
+		//genv *= 4.;
 		genv *= 1.-outro;
 		TT *= 0.25 + 0.25*float(Tt > 260.) + h(id).z*0.02*1.;
 		//TT -= h(id).x*10.;
@@ -177,7 +170,7 @@ void main(){
 
 			  //
 		  float f = ntf(
-			scale[int(i + tid)%scale.length()] 
+			scale[int(i + tid)%7] 
 			- 12. 
 			+ 12. * float(h(i + tid).y < 0.4*offsc) 
 			+ 12. * float(h(i +tid).x < 0.4*offsc) 
@@ -189,10 +182,14 @@ void main(){
 		  float kits = 2. + pow(h(i + tid).x,2.5)*20.;
 		  for(float k = 0.; k < kits; k++){
 			float g = f;
+			//if(h(g).x < 0.5){
+				//g *= 0.5;
+			//}
 			float ots = 1.
 				+ smoothstep(0.,4.,tid) * 2.
-				* exp(-mod(T,1.)*1.) 
-				* smoothstep(0.,0.004,mod(t,1.));
+				//* exp(-mod(T,1.)*1.) 
+				//* smoothstep(0.,0.004,mod(t,1.))
+				;
 			
 			float ot = pow(h(i + k*1.5 + tid).x,2. +.5 * smoothstep(500.,2000.,g));
 			g *= 1. + floor(ot*ots);
@@ -203,6 +200,7 @@ void main(){
 			  * smoothstep(0.,0.002,t)
 			  * smoothstep(7000.,800.,g)
 			;
+
 			
 		  
 			vec2 wave = vec2(
@@ -216,8 +214,13 @@ void main(){
 				//- pow(outro,65.)* cyclic(vec3(vec2(sin(t),cos(t)),10.*t)*100., 1., 1.).xy*30.*100000.
 			  )
 			) * rot(i);
+
+			if(Tt < 260)
+			wave = tanh(wave);
+			else
+				wave *= 2.;
 	  
-			chord += env * wave/its/kits*200.3 * (float(T < 60.) 
+			chord += env * wave/its/kits*200. * (float(T < 60.) 
 				+ outro*4.
 
 
@@ -246,16 +249,17 @@ void main(){
         }
 
 
-		float[4] notes = float[](
+		float[4] b_notes = float[](
 			notes[0],
 			notes[1],
 			notes[2],
 			notes[3]
 		);
+		
 
 		if(mod(t,8) < 1.){
 			for(int i = 0; i < 4; i++){
-				notes[i] += 7;
+				b_notes[i] += 7;
 			}
 		}
 
@@ -263,18 +267,17 @@ void main(){
 
         repd = mix(10.,repd,smoothstep(0.,60.,T)) ;
         
-        float tid = floor(t/repd);
+        int tid = int(t/repd);
         float tt = mod(t,repd);
-        float n = notes[int(mod(tid,4.))] - 12. * float(hash3f(vec3(tid)).x < 0.2)
-             + 12. * float(hash3f(vec3(tid)).z < 0.2);
+        float n = b_notes[tid%4] 
+			- 12 * float(hash3f(vec3(tid)).x < 0.2)
+            + 12 * float(hash3f(vec3(tid)).z < 0.2);
 
-		n += 12. * float(t > 60.);
-		n -= 12.;
-		n -= 12.;
-        float f = ntf(
-            n
-        );
+		n += 12. * float(t > 60.) - 24.;
+
+        float f = ntf( n );
         
+		// detune
         f -= 12. * float(hash3f(vec3(tid)).x < 0.2);
         
         float env = smoothstep(0.,0.004,tt) * exp(-tt*10.);
@@ -282,15 +285,21 @@ void main(){
         float fmamt = 2. + 10.*smoothstep(60.,100.,T);
         float fmwave = env * env * sin(TT*f*tau) * fmamt;
         if(i < 2.){
-            s += env*sin(TT*f*tau + fmwave )*0.3*vol;
+            s += env*sin(TT*f*tau + fmwave * smoothstep(1400.,500.,f))*0.3*vol;
         } else {
             //float q = tt*0.0;
-			float q = 0.; // MINIFIABLE
-            s += (
-				7.*env*sin((TT)*f*tau 
-				+ fmwave 
-				+ cyclic(vec3(vec2(sin(q),cos(q)),i), 1., 1.).xy*30.)
+			//float q = 0.; // MINIFIABLE
+			vec2 w = vec2(
+				7.*env*sin(TT*f*tau 
+				//+ fmwave * smoothstep(600.,500.,f)
+				+ fmwave * (1. - float(T > 260.)*0.4)
+				//+ i*vec2(1.53251,1.2)
+				+ cyclic(vec3(1.,0.5,i), 1., 1.).xy*30. // CAN BE MINIFIED
+				)
 			)/its*vol;
+
+			s += w;
+            //s += tanh(w);
         }
     }
     
@@ -356,7 +365,6 @@ void main(){
     }
     }
     
-    vec2 qq = vec2(0);
     its = 4.;
     for(float i = 0.; ++i < its;){ // --------- BASS
         //float t = T - pow(smoothstep(0.,1.,hash3f(vec3(i)).x),1.2)*(0.2 + 3. * hash3f(vec3(i)).y);
@@ -398,18 +406,20 @@ void main(){
 		env *= 1. 
 			//+ .0*smoothstep(140.,150.,T)
 		;
-        qq += env*sin(TT*f*tau + fmwave )/its*3.;
+        qq += env*sin(TT*f*tau + fmwave )/its*6.;
     }
+	s *= 2.;
     //qq /= its;
     s += qq;
 
     
-	s = tanh(s*1.2*smoothstep(0.,5.,Tt));
-	s *= 2.; // remove clipping?
+	s = tanh(s*1.2*smoothstep(0.,5.,Tt))*0.7 ;
+	s *= 1.; // remove clipping?
 	s = clamp(s,-1.,1.);
 	//s += chord*outro;
 	//s *= 0.;
  
 
-	hist[samp + 3000000] = s*genv + tanh(chord*outro*0.2 + sin(tau*30.*Tt)*10. * pow(outro,30.));
+	hist[samp + 3000000] = s*genv 
+		+ tanh(chord*outro*0.2 + sin(tau*30.*Tt)*10. * pow(outro,30.));
 }

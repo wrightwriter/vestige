@@ -14,9 +14,9 @@
 #if OPENGL_DEBUG || EDITOR
 	// Global array of file paths
 	static const char* shader_strings[100];
-	static const char* file_paths[100];
+	static const char* shader_paths[100];
 	static unsigned int shader_types[100];
-	static size_t shaders_count = 0;
+	static size_t shader_count = 0;
 #endif
 
 #if EDITOR || OPENGL_DEBUG
@@ -57,7 +57,7 @@ static bool _inline dbg_check_shader_compilation(int (&programs)[N]){
 			if (gl_temp_link_status == 0) {
 				char log[1000];
 				oglGetProgramInfoLog(pid, 1000 - 1, NULL, log);
-				MessageBoxA(NULL, log, file_paths[i], MB_ICONWARNING | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2);
+				MessageBoxA(NULL, log, shader_paths[i], MB_ICONWARNING | MB_CANCELTRYCONTINUE | MB_DEFBUTTON2);
 				return false;
 			}
 		}

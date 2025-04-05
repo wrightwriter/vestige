@@ -1,14 +1,15 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
-#define EDITOR												0
-#define EDITOR_FORCE_RELOAD_FROM_DISK	0
-#define VALIDATE_SHADERS_GLSLANG			0
-#define OPENGL_DEBUG									0
+
+#define EDITOR												1
+#define EDITOR_FORCE_RELOAD_FROM_DISK	1
+#define VALIDATE_SHADERS_GLSLANG			1
+#define OPENGL_DEBUG									1
 
 #define ANTI_TDR											1
 #define LAPTOP_GPU_FIX								0
 
-#define FULLSCREEN										1
+#define FULLSCREEN										0
 #define AUTORES												0
 #define VSYNC													1
 
@@ -16,6 +17,15 @@
 
 
 
+#ifdef RELEASE
+	#define DO_PERFECT_FFMPEG_CAPTURE			0
+	#define FULLSCREEN										1
+	#define ANTI_TDR											1
+	#define EDITOR												0
+	#define EDITOR_FORCE_RELOAD_FROM_DISK	0
+	#define VALIDATE_SHADERS_GLSLANG			0
+	#define OPENGL_DEBUG									0
+#endif
 
 
 #define XRES													1280
@@ -275,13 +285,12 @@ static void __forceinline init_window() {
 
 
 
-
 static int __forceinline add_program(unsigned int program_type, const char* str, const char* path) {
 	#if OPENGL_DEBUG
-		shader_strings[shaders_count] = str;
-		file_paths[shaders_count] = path;
-		shader_types[shaders_count] = program_type;
-		shaders_count++;
+		shader_strings[shader_count] = str;
+		shader_paths[shader_count] = path;
+		shader_types[shader_count] = program_type;
+		shader_count++;
 		return oglCreateShaderProgramv(program_type, 1, &str);
 	#else
 		return OglCreateShaderProgramv(program_type, 1, &str);

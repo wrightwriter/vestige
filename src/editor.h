@@ -1,27 +1,76 @@
 #pragma once
 
+#if EDITOR
+static HWND hwnd;
+static HWND hwndConsole;
+static float mouse_x_ndc = 0;
+static float mouse_y_ndc = 0;
+static bool win_focused = false;
+static bool gui_toggled = true;
+static bool keys_pressed[20] = {};
+static bool paused = false;
+
+static bool editor_finished = false;
+
+//static float editor_loop_start = 0;
+//static float editor_loop_end = MUSIC_DURATION - 0.002;
+
+static float editor_loop_start = 60 + 18;
+static float editor_loop_end = 60 + 18 + 8;
+
+static bool editor_loop_popup_finished = false;
+static LARGE_INTEGER editor_timer_start, editor_timer_freq;
+static float editor_average_ms = 0.;
+
+static bool editor_just_started = true;
+
+FILE* ffmpeg = nullptr;
+static bool editor_is_recording = false;
+
+#define key_space_down  keys_pressed[0]
+#define key_left_down  keys_pressed[1]
+#define key_right_down  keys_pressed[2]
+#define key_lmb_down  keys_pressed[3]
+#define key_aaaaa_down  keys_pressed[4]
+#define key_s_down  keys_pressed[5]
+#define key_l_down keys_pressed[6]
+#define key_r_down keys_pressed[7]
+#define key_v_down keys_pressed[8]
+
+
+#endif
+
+
 
 void editor_print_to_console(const char* message) {
 #if EDITOR
-		HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-		WriteConsoleA(hConsole, message, lstrlenA(message), NULL, NULL);
+	WriteConsoleA(hConsole, message, lstrlenA(message), NULL, NULL);
 #endif
 }
 
 
-void dbg_validate_shaders(){
-	#if EDITOR && VALIDATE_SHADERS_GLSLANG
+void dbg_try_validate_shaders() {
+#if EDITOR && VALIDATE_SHADERS_GLSLANG
+	if (!(key_v_down || editor_just_started)) {
+		return;
+	}
+		
     // char shader_validation_errors[MAX_ERROR_SIZE] = {0};
-    for (size_t i = 0; i < shaders_count; i++) {
+    for (size_t i = 0; i < shader_count; i++) {	
         // Write shader to a temporary file
-        FILE* file = fopen("shader.glsl", "w");
-        if (!file) {
-            MessageBoxA(0, "Failed to create temp shader file.", "Error", MB_OK | MB_ICONERROR);
-            return;
-        }
-        fprintf(file, "%s", shader_strings[i]);
-        fclose(file);
+        //FILE* file = fopen("shader.glsl", "w");
+        FILE* file;
+				if(editor_just_started){
+					file = fopen("shader.glsl", "w");
+					if (!file) {
+							MessageBoxA(0, "Failed to create temp shader file.", "Error", MB_OK | MB_ICONERROR);
+							return;
+					}
+					fprintf(file, "%s", shader_strings[i]);
+					fclose(file);
+				} 
 
 				const char* shaderSuffix;
 				switch (shader_types[i]) {
@@ -32,8 +81,22 @@ void dbg_validate_shaders(){
 				}
 
         char command[512];
-        snprintf(command, sizeof(command), "\"glslangValidator.exe\" -e main --auto-map-bindings --auto-map-locations --glsl-version 460 --no-link -S %s shader.glsl",
-                 shaderSuffix);
+				if(editor_just_started){
+					snprintf(
+						command, 
+						sizeof(command), 
+"\"glslangValidator.exe\" -e main --auto-map-bindings --auto-map-locations --glsl-version 460 --no-link -S %s shader.glsl",
+						shaderSuffix
+					);
+				} else {
+					snprintf(
+						command, 
+						sizeof(command), 
+"\"glslangValidator.exe\" -e main --auto-map-bindings --auto-map-locations --glsl-version 460 --no-link -S %s \"%s\"",
+						shaderSuffix,
+						shader_paths[i]
+					);
+				}
 
         SECURITY_ATTRIBUTES saAttr = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
         HANDLE hReadPipe, hWritePipe;
@@ -58,12 +121,15 @@ void dbg_validate_shaders(){
             if (strstr(buffer, "ERROR")) { // If output contains "ERROR", log it
             	MessageBoxA(0, "Validation fail", "Error", MB_OK | MB_ICONERROR);
                 // strcat(shader_validation_errors, "------ SHADER ");
-                // strcat(shader_validation_errors, file_paths[i]);
+                // strcat(shader_validation_errors, shader_paths[i]);
                 // strcat(shader_validation_errors, " ------\n");
                 // strcat(shader_validation_errors, buffer);
                 // strcat(shader_validation_errors, "\n");
             }
+        		editor_print_to_console("---- Validated shader: \n");
+        		editor_print_to_console(shader_paths[i]);
         		editor_print_to_console(buffer);
+        		editor_print_to_console("\n\n");
 
             WaitForSingleObject(pi.hProcess, INFINITE);
             CloseHandle(pi.hProcess);
@@ -77,42 +143,8 @@ void dbg_validate_shaders(){
 }
 
 
-
 #if EDITOR
-	static HWND hwnd;
-	static HWND hwndConsole; 
-	static float mouse_x_ndc = 0;
-	static float mouse_y_ndc = 0;
-	static bool win_focused = false;
-	static bool gui_toggled = true;
-	static bool keys_pressed[20] = {};
-	static bool paused = false;
 
-	static bool editor_finished = false;
-
-	//static float editor_loop_start = 0;
-	//static float editor_loop_end = MUSIC_DURATION - 0.002;
-
-	static float editor_loop_start = 60 + 18;
-	static float editor_loop_end = 60 + 18 + 8;
-
-	static bool editor_loop_popup_finished = false;
-	static LARGE_INTEGER editor_timer_start, editor_timer_freq;
-	static float editor_average_ms = 0.;
-	
-	static bool editor_just_started = true;
-
-	FILE* ffmpeg = nullptr;
-	static bool editor_is_recording = false;
-
-	#define key_space_down  keys_pressed[0]
-	#define key_left_down  keys_pressed[1]
-	#define key_right_down  keys_pressed[2]
-	#define key_lmb_down  keys_pressed[3]
-	#define key_aaaaa_down  keys_pressed[4]
-	#define key_s_down  keys_pressed[5]
-	#define key_l_down keys_pressed[6]
-	#define key_r_down keys_pressed[7]
 
 	void editor_create_console() {
 		QueryPerformanceFrequency(&editor_timer_freq);
@@ -172,6 +204,9 @@ void dbg_validate_shaders(){
 							}
 							if (wParam == 'R') {
 								key_r_down = true;
+							}
+							if (wParam == 'V') {
+								key_v_down = true;
 							}
 							break;
 			}
@@ -258,14 +293,14 @@ static void _inline editor_reload_from_disk() {
 	bool reload_shader_success[100];
 
 
-	for(int i = 0; i < shaders_count; i++) {
+	for(int i = 0; i < shader_count; i++) {
 		reload_shader[i] = false;
 		reload_shader_success[i] = true;
 	}
 
 	bool success = true;
-	for(int i = 0; i < shaders_count; i++) {
-		auto file_path = file_paths[i];
+	for(int i = 0; i < shader_count; i++) {
+		auto file_path = shader_paths[i];
 		struct stat file_stat;
 
 		stat(file_path, &file_stat);
@@ -283,7 +318,7 @@ static void _inline editor_reload_from_disk() {
 				#endif
 		}
 		reload_shader[i] = true;
-		FILE* file = fopen(file_paths[i], "r");
+		FILE* file = fopen(shader_paths[i], "r");
 		if (file) {
 			// Read file contents
 			fseek(file, 0, SEEK_END);
@@ -303,19 +338,19 @@ static void _inline editor_reload_from_disk() {
 			// } else {
 				// pids[i] = oglCreateShaderProgramv(GL_FRAGMENT_SHADER, 1, content);
 			// }
-			// printf("File content (%s):\n%s\n", file_paths[i], content);
+			// printf("File content (%s):\n%s\n", shader_paths[i], content);
 			free(content);
 			fclose(file);
 		} else {
 			// Handle file open error
-			fprintf(stderr, "Error: Unable to open file %s\n", file_paths[i]);
+			fprintf(stderr, "Error: Unable to open file %s\n", shader_paths[i]);
 		}
 		
 
 	}
 
 	bool a_shader_reloaded = false;
-	for(int i = 0; i < shaders_count; i++){
+	for(int i = 0; i < shader_count; i++){
 		if(reload_shader[i] == false){
 			continue;
 		}
@@ -326,16 +361,16 @@ static void _inline editor_reload_from_disk() {
 		if (gl_temp_link_status == 0) {
 			char log[1000];
 			oglGetProgramInfoLog(pid, 1000 - 1, NULL, log);
-			printf(file_paths[i]);
+			printf(shader_paths[i]);
 			printf("\n");
 			printf("\n");
 			printf(log);
 			#if EDITOR
 				editor_print_to_console("------- Shader Error -------\n");
-				editor_print_to_console(file_paths[i]);
+				editor_print_to_console(shader_paths[i]);
 				editor_print_to_console(log);
 			#else
-				MessageBoxA(NULL, log, file_paths[i], MB_HELP);
+				MessageBoxA(NULL, log, shader_paths[i], MB_HELP);
 			#endif
 			shader_failed_compile = true;
 			success = false;
@@ -343,7 +378,7 @@ static void _inline editor_reload_from_disk() {
 		}
 	}
 
-	for(int i = 0; i < shaders_count; i++) {
+	for(int i = 0; i < shader_count; i++) {
 		if(reload_shader[i]){
 			a_shader_reloaded = true;
 			if(!reload_shader_success[i]){
@@ -357,7 +392,7 @@ static void _inline editor_reload_from_disk() {
 				
 				#if EDITOR
 					editor_print_to_console("Reloaded shader:\n");
-					editor_print_to_console(file_paths[i]);
+					editor_print_to_console(shader_paths[i]);
 					editor_print_to_console("\n");
 					editor_print_to_console("\n");
 					editor_print_to_console("\n");
@@ -519,6 +554,7 @@ void editor_ffmpeg_capture_frame() {
 static void __forceinline do_editor_stuff(){
 	// Focus main window
 #if EDITOR
+	dbg_try_validate_shaders();
 	bool should_toggle_recording = key_r_down;
 	if(editor_just_started){
 		music_seek(editor_loop_start);
