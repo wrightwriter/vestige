@@ -4,10 +4,10 @@
 layout(location = 1) uniform float T;
 //layout(location = 2) uniform vec2 R;
 
-const vec2 R = vec2(1280,720);
 
 layout(std430,binding=0) coherent buffer Aa{uint hist[];};
 
+//const int border_width = 1;
 
 out vec4 C;
 
@@ -29,6 +29,9 @@ float hash_f(){ uint s = hash_u(seed); seed = s;return ( float( s ) / float( -1u
 //vec3 hash_v3(){ return vec3(hash_f(), hash_f(), hash_f()); }
 
 uint get_hist_id(ivec2 c){
+	//const vec2 R = vec2(1280,720) + vec2(border_width*2);
+	vec2 R = vec2(1300,740);
+    c += 10;
 	return (c.x + uint(R.x) * c.y + uint(R.x*R.y))%uint(R.x*R.y);
 }
 
@@ -130,6 +133,8 @@ int[148] chars = int[](
 
 
 void main( ){
+	vec2 R = vec2(1280,720);
+
 	vec2 uv = gl_FragCoord.xy/R.xy;
 	//seed = uint(gl_FragCoord.x +gl_FragCoord.y*5214.);
 
@@ -164,7 +169,7 @@ void main( ){
 		K_GLITCH = 100. * env;
 	}
 
-	uint hist_id =  get_hist_id(ivec2(gl_FragCoord.xy));
+	uint hist_id = get_hist_id(ivec2(gl_FragCoord.xy));
 
 	// tonemap
 	vec3 col = vec3(hist[hist_id]) * 0.0001;
@@ -266,7 +271,7 @@ void main( ){
 		draw_char(uv,  sd, 33, 4); // K
 	}
 	if(sd < 0. && (T > 420 && T < 450)){
-	//if(false){
+		//if(false){
 	
 		//hist[hist_id] = 1 - hist[hist_id]*500000;
 		hist[hist_id] += 100000;

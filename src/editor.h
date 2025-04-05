@@ -90,8 +90,12 @@ void dbg_validate_shaders(){
 
 	static bool editor_finished = false;
 
-	static float editor_loop_start = 0;
-	static float editor_loop_end = MUSIC_DURATION - 0.002;
+	//static float editor_loop_start = 0;
+	//static float editor_loop_end = MUSIC_DURATION - 0.002;
+
+	static float editor_loop_start = 60 + 18;
+	static float editor_loop_end = 60 + 18 + 8;
+
 	static bool editor_loop_popup_finished = false;
 	static LARGE_INTEGER editor_timer_start, editor_timer_freq;
 	static float editor_average_ms = 0.;
@@ -516,6 +520,9 @@ static void __forceinline do_editor_stuff(){
 	// Focus main window
 #if EDITOR
 	bool should_toggle_recording = key_r_down;
+	if(editor_just_started){
+		music_seek(editor_loop_start);
+	}
 	#if DO_PERFECT_FFMPEG_CAPTURE
 		static bool finished_perfect_ffmpeg_capture = false;
 		if(!finished_perfect_ffmpeg_capture){
@@ -566,7 +573,9 @@ static void __forceinline do_editor_stuff(){
 				//"-ar 48000 "                                // Audio sample rate: 48 kHz
 				"-ar 44100 "                                // Audio sample rate: 48 kHz
 
-				"outputc.mp4",                               // Output file name
+				//"outputc.mp4",                               // Output file name
+				//"output_bw10.mp4",                               // Output file name
+				"output_bw1.mp4",                               // Output file name
 				"wb"
 			);
 			if (!ffmpeg) {

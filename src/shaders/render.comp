@@ -11,13 +11,17 @@ layout(std430,binding=0) coherent buffer Aa{uint hist[];};
 layout(location = 1) uniform float Tt;
 //layout(location = 2) uniform vec2 R;
 
-const vec2 R = vec2(1280,720);
+//const int border_width = 1;
+
+///c += 10;
+//const vec2 R = vec2(1280,720) + vec2(2 * border_width);
+//const vec2 R = vec2(1280,720);
+vec2 R = vec2(1300,740);
 
 float T;
+float pi = acos(-1.);
+float tau = acos(-1.) * 2.;
 //layout(binding = 3) uniform sampler2D iChannel2;
-
-const float pi = acos(-1.);
-const float tau = acos(-1.) * 2.;
 
 uint seed;
 uint hash_u(uint _a) {

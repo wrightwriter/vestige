@@ -1,6 +1,6 @@
 #define WINDOWS_IGNORE_PACKING_MISMATCH
 
-#define EDITOR												1
+#define EDITOR												0
 #define EDITOR_FORCE_RELOAD_FROM_DISK	0
 #define VALIDATE_SHADERS_GLSLANG			0
 #define OPENGL_DEBUG									0
@@ -12,7 +12,10 @@
 #define AUTORES												0
 #define VSYNC													1
 
-#define DO_PERFECT_FFMPEG_CAPTURE			1
+#define DO_PERFECT_FFMPEG_CAPTURE			0
+
+
+
 
 
 #define XRES													1280
@@ -32,6 +35,7 @@
 #include "glext.h"
 #include "timeapi.h"
 #include "shaders/all_shaders.h"
+
 
 
 #pragma data_seg(".pids")
@@ -197,7 +201,8 @@ static void __forceinline init_window() {
 
 			//}
 		#else
-			hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUPWINDOW | WS_VISIBLE, 0, 0, xres, yres, 0, 0, 0, 0));
+			//hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUPWINDOW | WS_VISIBLE, 0, 0, xres, yres, 0, 0, 0, 0));
+			hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE, 0, 0, xres, yres, 0, 0, 0, 0));
 		#endif
 		//hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE | WS_MAXIMIZE, 0, 0, 0, 0, 0, 0, 0, 0));
 	#else
@@ -206,7 +211,11 @@ static void __forceinline init_window() {
 				hwnd = 
 			#endif
 			#if EDITOR
-				CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
+				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
+				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_OVERLAPPED | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
+				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUP | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
+				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_OVERLAPPEDWINDOW | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
+				CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUP | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
 				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
 				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
 				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_BORDER | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
@@ -215,6 +224,7 @@ static void __forceinline init_window() {
 			#endif
 		);
 	#endif
+
 
 	SetPixelFormat(hDC, ChoosePixelFormat(hDC, &pfd), &pfd);
 	wglMakeCurrent(hDC, wglCreateContext(hDC));

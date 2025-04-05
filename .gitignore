@@ -8,6 +8,8 @@ out/
 *.mp3
 *.mp4
 shader.glsl
+DawnCache/
+GPUCache/
 
 # User-specific files
 *.suo
