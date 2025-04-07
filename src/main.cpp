@@ -13,7 +13,7 @@
 #define AUTORES												0
 #define VSYNC													1
 
-#define DO_PERFECT_FFMPEG_CAPTURE			0
+#define DO_PERFECT_FFMPEG_CAPTURE			1
 
 
 
@@ -55,7 +55,7 @@
 	static HDC hDC;
 	static GLuint ssbo;
 	static PFNGLUSEPROGRAMPROC OglUseProgram;
-	static PFNGLUNIFORM1IPROC OglUniform1i;
+	//static PFNGLUNIFORM1IPROC OglUniform1i;
 	static PFNGLUNIFORM1FPROC OglUniform1f;
 	static PFNGLDISPATCHCOMPUTEPROC OglDispatchCompute;
 	static PFNGLCREATESHADERPROGRAMVPROC OglCreateShaderProgramv;
@@ -102,7 +102,7 @@ static void __forceinline init_window() {
 	#if EDITOR
 
 		for(int i = 0; i < 20; i++){
-			keys_pressed[i] = false;
+			editor_keys_pressed[i] = false;
 		}
 		HINSTANCE hInstance =	GetModuleHandle(NULL);
 
@@ -240,7 +240,7 @@ static void __forceinline init_window() {
 	wglMakeCurrent(hDC, wglCreateContext(hDC));
 
 	OglUseProgram = ((PFNGLUSEPROGRAMPROC)wglGetProcAddress("glUseProgram"));
-	OglUniform1i = ((PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i"));
+	//OglUniform1i = ((PFNGLUNIFORM1IPROC)wglGetProcAddress("glUniform1i"));
 	OglUniform1f = ((PFNGLUNIFORM1FPROC)wglGetProcAddress("glUniform1f"));
 	OglDispatchCompute = ((PFNGLDISPATCHCOMPUTEPROC)wglGetProcAddress("glDispatchCompute"));
 	OglCreateShaderProgramv = ((PFNGLCREATESHADERPROGRAMVPROC)wglGetProcAddress("glCreateShaderProgramv"));

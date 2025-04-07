@@ -186,8 +186,9 @@ void main(){
 				//g *= 0.5;
 			//}
 			float ots = 1.
-				+ smoothstep(0.,4.,tid) * 2.
-				//* exp(-mod(T,1.)*1.) 
+				+ smoothstep(0.,4.,tid) * 2
+
+				* exp(-mod(T,1.)*1.) 
 				//* smoothstep(0.,0.004,mod(t,1.))
 				;
 			
@@ -206,8 +207,8 @@ void main(){
 			vec2 wave = vec2(
 			  sin(
 				tau * g * TT 
-				+sin(h(i*2.4 + tid).x*15.*TT)*4. * smoothstep(10.,20.,T) // chorus
-				+ sin(tau * g * TT*2.)*env*env*env*0.6 * smoothstep(20.,60.,T)  // fm
+				+sin(h(i*2.4 + tid).x*15*TT)*4. * smoothstep(10,20,T) // chorus
+				+ sin(tau * g * TT*2)*env*env*env*.6 * smoothstep(20,60,T)  // fm
 
 				//- outro_mw
 				//- pow(outro,65.)* cyclic(vec3(vec2(sin(t),cos(t)),i)*100., 1., 1.).xy*30.*100000.
@@ -215,29 +216,25 @@ void main(){
 			  )
 			) * rot(i);
 
-			if(Tt < 260)
-			wave = tanh(wave);
+
+
+			if(Tt < 260 )
+				wave = mix(wave,tanh(wave),0.);
 			else
 				wave *= 2.;
+
+			//float otenv = exp(-mod(T,1.)*1.)* smoothstep(0.,0.004,mod(t,1.));
+			//float otenv = exp(-mod(T,1)*1.)* smoothstep(0.,.004,mod(T,1.));
+			//env *= mix(1.,0.,ot*(1.- otenv));
+			//
 	  
 			chord += env * wave/its/kits*200. * (float(T < 60.) 
 				+ outro*4.
-
-
-				//* smoothstep(0.,0.2,t)
-				//* smoothstep(4.*replen,4.*replen*0.4,t)
-				//* smoothstep(0.,0.04,mod(T,1.))
-				//* smoothstep(1.,0.96,mod(T,1.))
-				//+ smoothstep(160.,180.,T)*4.
 			);
 		  }
 		}
 	}
 	s += chord;
-
-//	hist[samp + 10000000] = s;
-  //return;
-  
 
     its = 400.;
 

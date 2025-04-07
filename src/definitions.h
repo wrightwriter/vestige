@@ -49,14 +49,6 @@ extern "C" {
 #define oglMapBuffer ((PFNGLMAPBUFFERPROC)wglGetProcAddress("glMapBuffer"))
 #define oglUnmapBuffer ((PFNGLUNMAPBUFFERPROC)wglGetProcAddress("glUnmapBuffer"))
 
-
-
-
-
-// oglUniform1f
-// oglDispatchCompute
-
-
 // declare this symbol if your code uses floating point types
 //extern "C" int _fltused;
 

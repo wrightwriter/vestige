@@ -15,7 +15,8 @@
 #include <mmreg.h>
 
 #pragma data_seg(".musicout")
-static float music_lpSoundBuffer[MUSIC_RESX * MUSIC_RESY * 2 *10];
+//static float music_lpSoundBuffer[MUSIC_RESX * MUSIC_RESY * 2 *10];
+static float music_lpSoundBuffer[MUSIC_MAX_SAMPLES * 2 + 100];
 
 static HWAVEOUT music_hWaveOut;
 
@@ -60,6 +61,7 @@ static __forceinline double music_get_time_seconds() {
 
 void editor_start_timer();
 void editor_end_timer(const char* label);
+void editor_print_to_console(const char* message);
 
 static void music_render() { 
 	editor_print_to_console("------ Begin audio rerender -------\n\n");
@@ -94,7 +96,7 @@ static void music_render() {
 #else
 		oglDispatchCompute(total_group_dispatches, 1, 1);
 #endif
-		oglGetNamedBufferSubData(ssbo, gpu_buff_start_offs_bytes, total_byte_count, &music_lpSoundBuffer);
+	oglGetNamedBufferSubData(ssbo, gpu_buff_start_offs_bytes, total_byte_count, &music_lpSoundBuffer);
 	editor_end_timer("audio reload\n");
 }
 

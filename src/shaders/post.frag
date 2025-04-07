@@ -1,7 +1,7 @@
 #version 460
 
 //layout(location = 0) uniform int F;
-layout(location = 1) uniform float T;
+layout(location = 1)uniform float T;
 //layout(location = 2) uniform vec2 R;
 
 
@@ -12,8 +12,7 @@ layout(std430,binding=0) coherent buffer Aa{uint hist[];};
 out vec4 C;
 
 uint seed;
-uint hash_u(uint _a) {
-	uint a = _a;
+uint hash_u(uint a) {
 	a ^= a >> 16;
 	a *= 0x7feb352du;
 	a ^= a >> 15;
@@ -29,9 +28,9 @@ float hash_f(){ uint s = hash_u(seed); seed = s;return ( float( s ) / float( -1u
 //vec3 hash_v3(){ return vec3(hash_f(), hash_f(), hash_f()); }
 
 uint get_hist_id(ivec2 c){
-	vec2 R = vec2(1300,740);
+	//vec2 R = vec2(1300,740);
     c += 10;
-	return (c.x + uint(R.x) * c.y + uint(R.x*R.y))%uint(R.x*R.y);
+	return (c.x + 1300 * c.y + uint(1300*740))%uint(1300*740);
 }
 
 
@@ -103,9 +102,9 @@ int[148] chars = int[](
 		vec2 b = vec2(chars[i*4 + 2], chars[i*4 + 3]);
 		float l = length(b-a);
 		vec2  d = (b-a)/l;
-		vec2  q = (p-(a+b)*0.5);
+		vec2  q = (p-(a+b)/2);
 			  q = mat2(d.x,-d.y,d.y,d.x)*q;
-			  q = abs(q)-vec2(l,th)*0.5;
+			  q = abs(q)-vec2(l,th)/2;
         sd = min(sd,length(max(q,0.0)) + min(max(q.x - th,q.y),0.0));
     }
     p.x -= 2.5;
@@ -115,9 +114,8 @@ int[148] chars = int[](
 
 
 void main( ){
-	vec2 R = vec2(1280,720);
+	//vec2 R = vec2(1280,720);
 
-	vec2 uv = gl_FragCoord.xy/R.xy;
 	//seed = uint(gl_FragCoord.x +gl_FragCoord.y*5214.);
 
 	//float end = smoothstep(250.,250.1,T);
@@ -226,8 +224,11 @@ void main( ){
 	}
 
 
-	uv = (gl_FragCoord.xy - R.xy/2.)/R.y;
-	uv *= 20.;
+
+	//vec2 uv = gl_FragCoord.xy/vec2(1280,720);
+
+	vec2 uv = (gl_FragCoord.xy - vec2(1280,720)/2)/720*20;
+	//uv *= 20.;
 
     float sd = 10.;
 	//uv.x += 0.6;
@@ -236,21 +237,20 @@ void main( ){
 
 	
 	//int char_idx = int(T)%3;
-	float char_idx = int(T)%3;
+	//float char_idx = int(T)%3;
 	//char_idx = 2;
-	if(char_idx == 0){
+	if(int(T)%3 == 0){
 		uv.x += 3.75; // can be smaller
 		draw_char(uv,  sd, 0, 4); // C
 		draw_char(uv,  sd, 4, 5); // A
 		draw_char(uv,  sd, 9, 4); // N
 		draw_char(uv,  sd, 13, 3);// T
-	} 
-	if (char_idx == 1){
-		uv.x += 20./13.5 - 0.25; // can be smaller
+	} else if (int(T)%3 == 1){
+		//uv.x += 20./13.5 - 0.25; // can be smaller
+		uv.x += 1.23;
 		draw_char(uv,  sd, 16, 6); // G
 		draw_char(uv,  sd, 22, 5); // O
-	} 
-	if (char_idx == 2){
+	} else {
 		uv.x += 3.75;
 		draw_char(uv,  sd, 27, 6); // B
 		draw_char(uv,  sd, 4, 5); // A

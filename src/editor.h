@@ -1,43 +1,38 @@
 #pragma once
 
 #if EDITOR
-static HWND hwnd;
-static HWND hwndConsole;
-static float mouse_x_ndc = 0;
-static float mouse_y_ndc = 0;
-static bool win_focused = false;
-static bool gui_toggled = true;
-static bool keys_pressed[20] = {};
-static bool paused = false;
+	static HWND hwnd;
+	static HWND editor_hwnd_console;
+	static float editor_mouse_x_ndc = 0;
+	static float editor_mouse_y_ndc = 0;
+	static bool editor_win_focused = false;
+	static bool editor_gui_toggled = true;
+	static bool editor_keys_pressed[20] = {};
+	static bool editor_paused = false;
 
-static bool editor_finished = false;
+	static bool editor_finished = false;
 
-//static float editor_loop_start = 0;
-//static float editor_loop_end = MUSIC_DURATION - 0.002;
+	static float editor_loop_start = 0;
+	static float editor_loop_end = MUSIC_DURATION - 0.002;
 
-static float editor_loop_start = 60 + 18;
-static float editor_loop_end = 60 + 18 + 8;
+	static bool editor_loop_popup_finished = false;
+	static LARGE_INTEGER editor_timer_start, editor_timer_freq;
+	static float editor_average_ms = 0.;
 
-static bool editor_loop_popup_finished = false;
-static LARGE_INTEGER editor_timer_start, editor_timer_freq;
-static float editor_average_ms = 0.;
+	static bool editor_just_started = true;
 
-static bool editor_just_started = true;
+	static FILE* editor_ffmpeg = nullptr;
+	static bool editor_is_recording = false;
 
-FILE* ffmpeg = nullptr;
-static bool editor_is_recording = false;
-
-#define key_space_down  keys_pressed[0]
-#define key_left_down  keys_pressed[1]
-#define key_right_down  keys_pressed[2]
-#define key_lmb_down  keys_pressed[3]
-#define key_aaaaa_down  keys_pressed[4]
-#define key_s_down  keys_pressed[5]
-#define key_l_down keys_pressed[6]
-#define key_r_down keys_pressed[7]
-#define key_v_down keys_pressed[8]
-
-
+	#define key_space_down  editor_keys_pressed[0]
+	#define key_left_down  editor_keys_pressed[1]
+	#define key_right_down  editor_keys_pressed[2]
+	#define key_lmb_down  editor_keys_pressed[3]
+	#define key_aaaaa_down  editor_keys_pressed[4]
+	#define key_s_down  editor_keys_pressed[5]
+	#define key_l_down editor_keys_pressed[6]
+	#define key_r_down editor_keys_pressed[7]
+	#define key_v_down editor_keys_pressed[8]
 #endif
 
 
@@ -45,7 +40,6 @@ static bool editor_is_recording = false;
 void editor_print_to_console(const char* message) {
 #if EDITOR
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
 	WriteConsoleA(hConsole, message, lstrlenA(message), NULL, NULL);
 #endif
 }
@@ -155,12 +149,12 @@ void dbg_try_validate_shaders() {
 			// MessageBox(NULL, errorMessage, "Error", MB_OK | MB_ICONERROR);
 			// return;
 		}
-		hwndConsole = GetConsoleWindow();
-		ShowWindow(hwndConsole, SW_SHOW);
+		editor_hwnd_console = GetConsoleWindow();
+		ShowWindow(editor_hwnd_console, SW_SHOW);
 		RECT rect;
 		GetWindowRect(hwnd, &rect);
-		SetWindowPos(hwndConsole, HWND_TOP, rect.left, rect.bottom - 300, rect.right - rect.left, 300, SWP_NOZORDER);
-		SetForegroundWindow(hwndConsole);
+		SetWindowPos(editor_hwnd_console, HWND_TOP, rect.left, rect.bottom - 300, rect.right - rect.left, 300, SWP_NOZORDER);
+		SetForegroundWindow(editor_hwnd_console);
 	}
 
 	// Main message loop
@@ -174,7 +168,7 @@ void dbg_try_validate_shaders() {
 
 
 	LRESULT CALLBACK editor_winapi_window_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-			if(win_focused)
+			if(editor_win_focused)
 			switch (uMsg) {
 					case WM_DESTROY:
 							PostQuitMessage(0);
@@ -529,7 +523,7 @@ void editor_ffmpeg_capture_frame() {
     oglBindBuffer(GL_PIXEL_PACK_BUFFER, pboIds[nextIndex]);
     unsigned char* pixels = (unsigned char*)oglMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
 		if (pixels) {
-			fwrite(pixels, 1, xres * yres * 3, ffmpeg); // Directly write without flipping
+			fwrite(pixels, 1, xres * yres * 3, editor_ffmpeg); // Directly write without flipping
 			oglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
     }
     //if (pixels) {
@@ -539,7 +533,7 @@ void editor_ffmpeg_capture_frame() {
     //        memcpy(flippedPixels + (yres - 1 - y) * xres * 3, pixels + y * xres * 3, xres * 3);
     //    }
 
-    //    fwrite(flippedPixels, 1, xres * yres * 3, ffmpeg);
+    //    fwrite(flippedPixels, 1, xres * yres * 3, editor_ffmpeg);
     //    free(flippedPixels);
 
     //    oglUnmapBuffer(GL_PIXEL_PACK_BUFFER);
@@ -560,6 +554,9 @@ static void __forceinline do_editor_stuff(){
 		music_seek(editor_loop_start);
 	}
 	#if DO_PERFECT_FFMPEG_CAPTURE
+		if(editor_just_started){
+			music_save_wav();
+		}
 		static bool finished_perfect_ffmpeg_capture = false;
 		if(!finished_perfect_ffmpeg_capture){
 			if(editor_just_started){
@@ -567,7 +564,7 @@ static void __forceinline do_editor_stuff(){
 				should_toggle_recording = true;
 			//} else if(editor_time > MUSIC_DURATION){
 			//} else if(editor_time > MUSIC_DURATION - 0.2){
-			} else if(editor_time > MUSIC_DURATION - 0.2){
+			} else if(editor_time > MUSIC_DURATION){
 				should_toggle_recording = true;
 				finished_perfect_ffmpeg_capture = true;
 			}
@@ -576,13 +573,13 @@ static void __forceinline do_editor_stuff(){
 	#endif
 	if(should_toggle_recording){
 		if(!editor_is_recording){
-			//ffmpeg = _popen(
+			//editor_ffmpeg = _popen(
 			//		"ffmpeg -y -f rawvideo -pixel_format rgb24 -video_size 1280x720 -r 60 -i - " // HARDCODED RESOLUTION
 			//		"-c:v libx264 -preset fast -crf 18 -pix_fmt yuv420p output.mp4",
 			//		"wb"
 			//);
 
-			ffmpeg = _popen(
+			editor_ffmpeg = _popen(
 				"ffmpeg -y "                                // Overwrite output file if it exists
 				"-f rawvideo "                              // Input format: raw pixel data
 				"-thread_queue_size 512 "
@@ -611,16 +608,16 @@ static void __forceinline do_editor_stuff(){
 
 				//"outputc.mp4",                               // Output file name
 				//"output_bw10.mp4",                               // Output file name
-				"output_bw1.mp4",                               // Output file name
+				"output_bw10_v2.mp4",                               // Output file name
 				"wb"
 			);
-			if (!ffmpeg) {
+			if (!editor_ffmpeg) {
 					MessageBox(NULL, "Failed to start FFMPEG!", "Error", MB_ICONERROR);
 					//return 1;
 			}
 			editor_is_recording = true;
 		} else {
-			_pclose(ffmpeg);
+			_pclose(editor_ffmpeg);
 			editor_is_recording = false;
 			#if DO_PERFECT_FFMPEG_CAPTURE
 					MessageBox(NULL, "Finished FFMPEG capture!", "Woo", MB_ICONERROR);
@@ -636,7 +633,7 @@ static void __forceinline do_editor_stuff(){
 
 	// --- Toggle gui
 	if(key_aaaaa_down){
-		gui_toggled = !gui_toggled;
+		editor_gui_toggled = !editor_gui_toggled;
 	}
 
 	// --- Mouse position
@@ -659,11 +656,11 @@ static void __forceinline do_editor_stuff(){
 
 		#endif
 
-    mouse_x_ndc = (2.0f * cursorPos.x) / winWidth - 1.0f;
-    mouse_y_ndc = 1.0f - (2.0f * cursorPos.y) / winHeight;
+    editor_mouse_x_ndc = (2.0f * cursorPos.x) / winWidth - 1.0f;
+    editor_mouse_y_ndc = 1.0f - (2.0f * cursorPos.y) / winHeight;
 	}
 	{
-		win_focused = GetForegroundWindow() == hwnd;
+		editor_win_focused = GetForegroundWindow() == hwnd;
 	}
 	// --- Position console
 	{
@@ -671,7 +668,7 @@ static void __forceinline do_editor_stuff(){
 	 	GetWindowRect(hwnd, &rect);
 
 		#if !FULLSCREEN
-			SetWindowPos(hwndConsole, HWND_TOP, rect.left, rect.bottom, rect.right - rect.left, 300, SWP_NOACTIVATE | SWP_NOSIZE | SWP_SHOWWINDOW);
+			SetWindowPos(editor_hwnd_console, HWND_TOP, rect.left, rect.bottom, rect.right - rect.left, 300, SWP_NOACTIVATE | SWP_NOSIZE | SWP_SHOWWINDOW);
 		#endif
 	}
 
@@ -694,16 +691,16 @@ static void __forceinline do_editor_stuff(){
 	// --- Pause
 	{
 		if(key_space_down){ 
-			if(paused){		// unpause
+			if(editor_paused){		// unpause
 				music_unmute();
 				music_seek(editor_time);
 			} else {			// pause
 				music_mute();
 				editor_time = music_time;
 			}
-			paused = !paused;
+			editor_paused = !editor_paused;
 		}
-		if(!paused){
+		if(!editor_paused){
 			#if DO_PERFECT_FFMPEG_CAPTURE
 				editor_time += 1./60.;
 			#else
@@ -719,7 +716,7 @@ static void __forceinline do_editor_stuff(){
 		//editor_average_ms
     sprintf(buffer, "%.2fs ------- %.2fms ------- %.2fps                 loop: %.2f - %.2f ", editor_time, editor_average_ms, 1000./editor_average_ms, editor_loop_start, editor_loop_end);
 		SetWindowText(hwnd, buffer);
-		SetWindowText(hwndConsole, buffer);
+		SetWindowText(editor_hwnd_console, buffer);
 	}
 
 
@@ -730,7 +727,7 @@ static void __forceinline do_editor_stuff(){
 	{
 		oglUseProgram(0);
 
-		if(gui_toggled){
+		if(editor_gui_toggled){
 			float width = 0.05;
 			float height = 0.05;
 			float pos_y = -1;
@@ -759,10 +756,10 @@ static void __forceinline do_editor_stuff(){
 		bool is_mouse_seeking = (GetAsyncKeyState(VK_LBUTTON) & 0x8000);
 		bool is_kbd_seeking = key_left_down || key_right_down;
 		bool should_seek = is_kbd_seeking || is_mouse_seeking;
-		if(should_seek && win_focused){
+		if(should_seek && editor_win_focused){
 			double target_time;
 			if(is_mouse_seeking){
-				target_time = MUSIC_DURATION * (mouse_x_ndc + 1) / 2;
+				target_time = MUSIC_DURATION * (editor_mouse_x_ndc + 1) / 2;
 			} else if (is_kbd_seeking){
 				float seek_amt_s = 10.;
 				target_time += float(key_right_down) * seek_amt_s;
@@ -772,7 +769,7 @@ static void __forceinline do_editor_stuff(){
 			if(target_time < 0){
 				target_time = 0;
 			}
-			if(paused){
+			if(editor_paused){
 				editor_time = target_time;
 			}
 			music_seek(target_time);
@@ -800,7 +797,7 @@ static void __forceinline do_editor_stuff(){
 	// --- Reset keys & vars
 	{
 		for(int i = 0; i < 20; i++){
-			keys_pressed[i] = false;
+			editor_keys_pressed[i] = false;
 		}
 		audio_shader_just_reloaded = false;
 	}
