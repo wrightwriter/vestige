@@ -438,67 +438,67 @@ static void _inline editor_try_reload() {
 // Global variables to store the input values
 
 // Window procedure to handle the interactions with the custom window
-LRESULT CALLBACK editor_loop_popup_window_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-#if EDITOR
-    switch (uMsg) {
-        case WM_COMMAND:
-            if (LOWORD(wParam) == 103) { // OK button clicked
-                char buffer1[16], buffer2[16];
-                GetWindowText(GetDlgItem(hwnd, 101), buffer1, sizeof(buffer1));
-                GetWindowText(GetDlgItem(hwnd, 102), buffer2, sizeof(buffer2));
-								editor_loop_start = atoi(buffer1);
-								editor_loop_end = atoi(buffer2);
-								editor_loop_popup_finished = true;
-                PostMessage(hwnd, WM_CLOSE, 0, 0);
-								DestroyWindow(hwnd);
-                return 0;
-            }
-            break;
-        case WM_CLOSE:
-            DestroyWindow(hwnd);
-            return 0;
-    }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
-#endif
-	return LRESULT(0);
-}
+//LRESULT CALLBACK editor_loop_popup_window_proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+//#if EDITOR
+//    switch (uMsg) {
+//        case WM_COMMAND:
+//            if (LOWORD(wParam) == 103) { // OK button clicked
+//                char buffer1[16], buffer2[16];
+//                GetWindowText(GetDlgItem(hwnd, 101), buffer1, sizeof(buffer1));
+//                GetWindowText(GetDlgItem(hwnd, 102), buffer2, sizeof(buffer2));
+//								editor_loop_start = atoi(buffer1);
+//								editor_loop_end = atoi(buffer2);
+//								editor_loop_popup_finished = true;
+//                PostMessage(hwnd, WM_CLOSE, 0, 0);
+//								DestroyWindow(hwnd);
+//                return 0;
+//            }
+//            break;
+//        case WM_CLOSE:
+//            DestroyWindow(hwnd);
+//            return 0;
+//    }
+//    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+//#endif
+//	return LRESULT(0);
+//}
 
 // Function to create the input window and get two integers from the user
-void editor_do_loop_popup(const char* title) {
-#if EDITOR
-		editor_loop_popup_finished = false;
-    WNDCLASS wc = {0};
-    wc.lpfnWndProc = editor_loop_popup_window_proc;
-    wc.hInstance = GetModuleHandle(NULL);
-    wc.lpszClassName = "InputDialogClass";
-    RegisterClass(&wc);
-
-    HWND hwnd = CreateWindowEx(0, "InputDialogClass", title, WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-                               CW_USEDEFAULT, CW_USEDEFAULT, 300, 400, NULL, NULL, GetModuleHandle(NULL), NULL);
-
-    if (!hwnd) {
-        MessageBoxA(NULL, "Failed to create window", "Error", MB_OK | MB_ICONERROR);
-				return;
-    }
-
-    CreateWindow("STATIC", "First Value:", WS_VISIBLE | WS_CHILD, 10, 40, 200, 20, hwnd, NULL, NULL, NULL);
-    CreateWindow("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER, 10, 70, 200, 20, hwnd, (HMENU)101, NULL, NULL);
-
-    CreateWindow("STATIC", "Second Value:", WS_VISIBLE | WS_CHILD, 10, 100, 200, 20, hwnd, NULL, NULL, NULL);
-    CreateWindow("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER, 10, 130, 200, 20, hwnd, (HMENU)102, NULL, NULL);
-
-    CreateWindow("BUTTON", "OK", WS_VISIBLE | WS_CHILD, 10, 160, 50, 20, hwnd, (HMENU)103, NULL, NULL);
-
-    MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0) && !editor_loop_popup_finished) {
-        if (!IsDialogMessage(hwnd, &msg)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }
-#endif
-}
-
+//void editor_do_loop_popup(const char* title) {
+//#if EDITOR
+//		editor_loop_popup_finished = false;
+//    WNDCLASS wc = {0};
+//    wc.lpfnWndProc = editor_loop_popup_window_proc;
+//    wc.hInstance = GetModuleHandle(NULL);
+//    wc.lpszClassName = "InputDialogClass";
+//    RegisterClass(&wc);
+//
+//    HWND hwnd = CreateWindowEx(0, "InputDialogClass", title, WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+//                               CW_USEDEFAULT, CW_USEDEFAULT, 300, 400, NULL, NULL, GetModuleHandle(NULL), NULL);
+//
+//    if (!hwnd) {
+//        MessageBoxA(NULL, "Failed to create window", "Error", MB_OK | MB_ICONERROR);
+//				return;
+//    }
+//
+//    CreateWindow("STATIC", "First Value:", WS_VISIBLE | WS_CHILD, 10, 40, 200, 20, hwnd, NULL, NULL, NULL);
+//    CreateWindow("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER, 10, 70, 200, 20, hwnd, (HMENU)101, NULL, NULL);
+//
+//    CreateWindow("STATIC", "Second Value:", WS_VISIBLE | WS_CHILD, 10, 100, 200, 20, hwnd, NULL, NULL, NULL);
+//    CreateWindow("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_NUMBER, 10, 130, 200, 20, hwnd, (HMENU)102, NULL, NULL);
+//
+//    CreateWindow("BUTTON", "OK", WS_VISIBLE | WS_CHILD, 10, 160, 50, 20, hwnd, (HMENU)103, NULL, NULL);
+//
+//    MSG msg;
+//    while (GetMessage(&msg, NULL, 0, 0) && !editor_loop_popup_finished) {
+//        if (!IsDialogMessage(hwnd, &msg)) {
+//            TranslateMessage(&msg);
+//            DispatchMessage(&msg);
+//        }
+//    }
+//#endif
+//}
+//
 
 // Read OpenGL framebuffer and send to FFMPEG
 void editor_ffmpeg_capture_frame() {
@@ -680,7 +680,23 @@ static void __forceinline do_editor_stuff(){
 	}
 
 	if(key_l_down){
-		editor_do_loop_popup("Loop start");
+			//editor_do_loop_popup("Loop start");
+		static bool is_picking_loop_pos = false;
+
+		if(is_picking_loop_pos){
+			editor_loop_end = editor_time;
+			is_picking_loop_pos = false;
+			editor_print_to_console("----- STARTED LOOP ------ \n");
+		} else {
+			if(editor_loop_start > 0.002 || editor_loop_end < MUSIC_DURATION - 0.001){
+				editor_loop_start = 0;
+				editor_loop_end = MUSIC_DURATION;
+				editor_print_to_console("----- RESET LOOP ------ \n");
+			} else {
+				editor_loop_start = editor_time;
+				is_picking_loop_pos = true;
+			}
+		}
 
 		if(editor_loop_start == 0 && editor_loop_end == 0){
 			editor_loop_end = MUSIC_DURATION;
@@ -692,7 +708,6 @@ static void __forceinline do_editor_stuff(){
 		if(editor_loop_end > MUSIC_DURATION){
 			editor_loop_end = MUSIC_DURATION;
 		}
-		
 	}
 
 	// --- Pause

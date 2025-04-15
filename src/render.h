@@ -92,7 +92,8 @@ static void __forceinline main_loop() {
 		//	oglUniform1i(0, frame); // unused
 		OglUniform1f(1, music_time);
 		//oglUniform2f(2, xres, yres);
-		glRects(-1, -1, 1, 1);
+		//glRects(-1, -1, 1, 1);
+		glRects(-10, -1, 1, 10);
 	}
 
 	

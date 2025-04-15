@@ -29,8 +29,8 @@ float hash_f(){ uint s = hash_u(seed); seed = s;return ( float( s ) / float( -1u
 
 uint get_hist_id(ivec2 c){
 	//vec2 R = vec2(1300,740);
-    c += 10;
-	return (c.x + 1300 * c.y + uint(1300*740))%uint(1300*740);
+    c += 20;
+	return (c.x + 1320 * c.y + uint(1320*760))%uint(1320*760);
 }
 
 
@@ -123,33 +123,27 @@ void main( ){
 	//float endb = smoothstep(280.,280.1,T);
 	float endb = float(T > 280);
 
-	float repd = 0.5 + sin(T/2)*2/T;
-	float eenv = mod(T,repd);
-	eenv = exp(-eenv*40.);
-	//eenv = 1.;
+	float repd = 0.5 + sin(T/2)*2/T; // MUSIC ENV
 
-	float K_COL = 0.03
-		+ 0.05* smoothstep(90.,190.,T)
+	float K_COL = .03
+		+ .05* smoothstep(90,190,T)
 		//+ 0.1* smoothstep(90.,190.,T)
-		- end + 4.*endb * smoothstep(4.,0.,mod(T,4.));
+		- end + 4*endb * smoothstep(4,0,mod(T,4));
 	;
+	float rewind = smoothstep(230,250,T)*float(T<250);
 	
-	float K_GLITCH = 0;
-	K_GLITCH += 
-		smoothstep(0,50,T);
+	float K_GLITCH = smoothstep(0,50,T);
 	K_GLITCH *= pow(hash_f_s(floor(T)), 2);
-	K_GLITCH += .9* smoothstep(160,190,T)*eenv; // doesnt do much
+	K_GLITCH += .9* smoothstep(160,190,T)*exp(-mod(T,repd)*40.); // doesnt do much
 	K_GLITCH *= 1-end + endb;
+	K_GLITCH += rewind;
 
 
 	seed = uint(gl_FragCoord.x +gl_FragCoord.y*1111);
-	hash_f();
+	hash_f(); // ------------ DELETE IF DESPARATE
 
 	if(T > 80 && T < 100){
-		//float env = exp(-mod(T,4.));
-		float env = smoothstep(1,0,mod(T,4.));
-        //float repd = 0.5 + sin(t*0.5)*2./t;
-		K_GLITCH = 100 * env;
+		K_GLITCH = 100 * smoothstep(1,0,mod(T,4.));
 	}
 
 	uint hist_id = get_hist_id(ivec2(gl_FragCoord.xy));
@@ -159,12 +153,12 @@ void main( ){
 	float pal_idx = col.x*460;
 	
 	vec3[4] kCols = vec3[](
-		vec3(1,1,1), vec3(1,0,1), vec3(1,1,.1), vec3(.75,1.5,1.5)
+		vec3(1), vec3(1,0,1), vec3(1,1,.1), vec3(.75,1.5,1.5)
 	);
-	vec3 pal = mix( kCols[int(pal_idx)%4], kCols[int(pal_idx + 1)%4], smoothstep(0.,1.,fract(pal_idx)) );
-	col = col/(1.+col);
+	vec3 pal = mix( kCols[int(pal_idx)%4], kCols[int(pal_idx + 1)%4], smoothstep(0,1,fract(pal_idx)) );
+	col = col/(1+col);
 	if(hash_f_s(floor(T*.8))<.7){
-		col = 1.- col;
+		col = 1- col;
 	} else {
 		col = pow(step(col,vec3(.5)),vec3(0.02)); 
 		col = pow(abs(col),vec3(0.02));
@@ -182,26 +176,22 @@ void main( ){
 		col -= pal;
 	}
 
-	//col = mix(col, hash_v3(), smoothstep(460.,461.,T));
-
-	//C = pow(abs(col.xyzz), vec4(2./.45));
 	C = pow(abs(col.xyzz), vec4(4.4));
-	//C = vec4(pow(abs(col), vec3(2./0.45)),1);
-
 
 	if(T > 460){
 		//hist[hist_id] *= 5;
 		hist[hist_id] = (hist[hist_id]*400)%10000000;
-	
-	} else if(mod(T,9.- endb*5.) < 1. - float(T > 460.)){
+	} else if(mod(T,9.- endb*5 + rewind * 5) < 1. - float(T > 460.)){
 		hist[hist_id] = 0;
 	} else {
+		
 		if (col.x < K_GLITCH){
 			ivec2 offs = -ivec2(0, 4);
-			//seed += F; // ???????
+			//seed += int(T*10); // ???????
 			offs *= ((int(hash_f() < col.x*1111.))*2 - 1)*(1 + 5*int(hash_f_s(floor(T))));
 			offs *= int(hash_f_s(floor(T) * 124.)*2.)*2 - 1;
-			offs *= 1 + int(endb * smoothstep(3.,0.,mod(T,4.))*20.);
+			offs *= 1 + int(endb * smoothstep(3.,0.,mod(T,4.))*20.) + int(rewind*100);
+			offs *= 1 + int(20*smoothstep(130,190,T)*exp(-mod(T,repd)*40.)*float(T<250));
 			if(T > 122 && T < 250.){
 				offs = ivec2(offs.y,offs.x);
 			}
@@ -210,18 +200,33 @@ void main( ){
 				offs -= offs;
 			}
 			
-		hist[hist_id] = hist[get_hist_id((ivec2(gl_FragCoord.xy) + offs))];
+			hist[hist_id] = hist[get_hist_id((ivec2(gl_FragCoord.xy) + offs))];
 		}else {
 			hist[hist_id] = 0;
 		}
 	}
-	if(end > 0.1){
+
+	//hist[hist_id] = uint(hash_f()*10000);
+
+	if(end > .1){
 		//C*= 0.1;
-		C = 1.-C;
+		C = 1-C;
 	}
-	if(T > 350.){
-		C = vec4(dot(C,C) < 0.5);
+	if(T > 350){
+		C = vec4(dot(C,C) < .5);
 	}
+
+
+
+	if(gl_FragCoord.x > 400.){
+		C.rgb = vec3(hist[hist_id]) * 0.01;
+		C = C/(1.+C);
+		C = fract(C);
+	}
+
+	/*
+
+	*/
 
 
 
@@ -230,7 +235,7 @@ void main( ){
 	vec2 uv = (gl_FragCoord.xy - vec2(1280,720)/2)/720*20;
 	//uv *= 20.;
 
-    float sd = 10.;
+    float sd = 10;
 	//uv.x += 0.6;
 	//uv *= 20.;
 	
@@ -257,7 +262,7 @@ void main( ){
 		draw_char(uv,  sd, 0, 4); // C
 		draw_char(uv,  sd, 33, 4); // K
 	}
-	if(sd < 0. && (T > 420 && T < 450)){
+	if(sd < 0 && (T > 420 && T < 450)){
 		//if(false){
 	
 		//hist[hist_id] = 1 - hist[hist_id]*500000;

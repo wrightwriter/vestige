@@ -318,7 +318,6 @@ void entrypoint(void) {
 //void entrypoint(void) {
 
 
-
 	init_window();
 	init_shaders();
 	init_resources();
