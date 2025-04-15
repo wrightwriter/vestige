@@ -28,7 +28,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{59C1D4F3-AE93-4A0A-B4FE-60841CA865E5}</ProjectGuid>
-    <ProjectName>Leviathan 2.0</ProjectName>
+    <ProjectName>Vestige-4k</ProjectName>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

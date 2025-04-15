@@ -13,7 +13,7 @@
 #define AUTORES												0
 #define VSYNC													1
 
-#define DO_PERFECT_FFMPEG_CAPTURE			1
+#define DO_PERFECT_FFMPEG_CAPTURE			0
 
 
 
@@ -216,23 +216,29 @@ static void __forceinline init_window() {
 		#endif
 		//hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE | WS_MAXIMIZE, 0, 0, 0, 0, 0, 0, 0, 0));
 	#else
-		hDC = GetDC(
-			#if EDITOR
-				hwnd = 
-			#endif
-			#if EDITOR
-				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
-				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_OVERLAPPED | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
-				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUP | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
-				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_OVERLAPPEDWINDOW | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
-				CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUP | WS_VISIBLE, windowX - xres/2 + 1300, windowY - yres/2 + 100, xres, yres, 0, 0, hInstance, 0)
-				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
-				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_POPUPWINDOW | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
-				//CreateWindow( WINDOW_CLASS_NAME , 0, WS_BORDER | WS_VISIBLE, windowX - xres/2, windowY - yres/2, xres, yres, 0, 0, hInstance, 0)
-			#else
-				CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE, 0, 0, xres, yres, 0, 0, 0, 0)
-			#endif
-		);
+		#if EDITOR
+			RECT rect;
+			rect.left   = 0;
+			rect.top    = 0;
+			rect.right  = xres;
+			rect.bottom = yres;
+			DWORD windowStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE;
+			//DWORD windowStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+
+			AdjustWindowRect( &rect, windowStyle, FALSE );
+
+			hDC = GetDC(
+					hwnd = CreateWindow(
+						WINDOW_CLASS_NAME, 0, windowStyle, 
+						windowX - xres/2, windowY - yres/2, 
+						rect.right - rect.left, rect.bottom - rect.top, 
+						0, 0, 0, 0)
+			);
+		#else
+			hDC = GetDC(
+					CreateWindow((LPCSTR)0xC018, 0, WS_OVERLAPPEDWINDOW | WS_VISIBLE, xres/2, yres/2, xres, yres, 0, 0, 0, 0)
+			);
+		#endif
 	#endif
 
 

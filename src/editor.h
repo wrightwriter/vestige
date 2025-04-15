@@ -10,6 +10,8 @@
 	static bool editor_keys_pressed[20] = {};
 	static bool editor_paused = false;
 
+	static bool editor_window_is_always_on_top = false;
+
 	static bool editor_finished = false;
 
 	static float editor_loop_start = 0;
@@ -33,6 +35,7 @@
 	#define key_l_down editor_keys_pressed[6]
 	#define key_r_down editor_keys_pressed[7]
 	#define key_v_down editor_keys_pressed[8]
+	#define key_a_down  editor_keys_pressed[9]
 #endif
 
 
@@ -202,6 +205,10 @@ void dbg_try_validate_shaders() {
 							if (wParam == 'V') {
 								key_v_down = true;
 							}
+							if (wParam == 'A') {
+								key_a_down = true;
+							}
+
 							break;
 			}
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -713,8 +720,23 @@ static void __forceinline do_editor_stuff(){
 	// --- Update titlebar
 	{
 		char buffer[650];
+		char buffer_min_secs[30];
+
+		int minutes = editor_time / 60;
+		int seconds = int(editor_time) % 60;
+
+		sprintf(buffer_min_secs, "%d:%02d", minutes, seconds);
+
+		const char* str_win_always_on_top = editor_window_is_always_on_top ? "[A] " : "";
 		//editor_average_ms
-    sprintf(buffer, "%.2fs ------- %.2fms ------- %.2fps                 loop: %.2f - %.2f ", editor_time, editor_average_ms, 1000./editor_average_ms, editor_loop_start, editor_loop_end);
+    sprintf(
+			buffer, 
+			"%s%.2fs | %s ------- %.2fms ------- %.2fps                 loop: %.2f - %.2f ", 
+			str_win_always_on_top, 
+			editor_time, buffer_min_secs,
+			editor_average_ms, 
+			1000./editor_average_ms, editor_loop_start, editor_loop_end
+		);
 		SetWindowText(hwnd, buffer);
 		SetWindowText(editor_hwnd_console, buffer);
 	}
@@ -751,6 +773,27 @@ static void __forceinline do_editor_stuff(){
 	}
 	#endif
 
+	if(key_a_down){
+    DWORD exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    BOOL isTopMost = (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_TOPMOST) != 0;
+
+    SetWindowPos(
+        hwnd,
+        isTopMost ? HWND_NOTOPMOST : HWND_TOPMOST,
+        0, 0, 0, 0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
+    );
+
+    SetWindowPos(
+        editor_hwnd_console,
+        isTopMost ? HWND_NOTOPMOST : HWND_TOPMOST,
+        0, 0, 0, 0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
+    );
+
+		editor_window_is_always_on_top = !editor_window_is_always_on_top;
+	}
+
 	// --- Seek
 	{
 		bool is_mouse_seeking = (GetAsyncKeyState(VK_LBUTTON) & 0x8000);
@@ -762,6 +805,7 @@ static void __forceinline do_editor_stuff(){
 				target_time = MUSIC_DURATION * (editor_mouse_x_ndc + 1) / 2;
 			} else if (is_kbd_seeking){
 				float seek_amt_s = 10.;
+				target_time = editor_time;
 				target_time += float(key_right_down) * seek_amt_s;
 				target_time -= float(key_left_down) * seek_amt_s;
 			}

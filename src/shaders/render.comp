@@ -150,6 +150,7 @@ void main( ){
 
         }
 		// SQUARE GOOD SHIT
+		//if(abs(K_OFFS) > .0001){
 		if(abs(K_OFFS) > .0001){
 			p = pmod(p,3 + K_OFFS);
 		} else {

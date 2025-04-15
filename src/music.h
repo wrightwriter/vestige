@@ -16,6 +16,11 @@
 
 #pragma data_seg(".musicout")
 //static float music_lpSoundBuffer[MUSIC_RESX * MUSIC_RESY * 2 *10];
+
+#if EDITOR
+	static float editor_music_back_SoundBuffer[MUSIC_MAX_SAMPLES * 2 + 100];
+#endif
+
 static float music_lpSoundBuffer[MUSIC_MAX_SAMPLES * 2 + 100];
 
 static HWAVEOUT music_hWaveOut;
@@ -132,6 +137,7 @@ static void __forceinline music_seek(double pos_secs) {
 
 static void __forceinline music_mute(){
 #if EDITOR
+		memcpy(editor_music_back_SoundBuffer, music_lpSoundBuffer, MUSIC_MAX_SAMPLES * 2 * 4 );
 		int samples_cnt = MUSIC_SAMPLE_RATE * MUSIC_DURATION;
 		for(int i = 0; i < samples_cnt * 2; i++){
 			music_lpSoundBuffer[i] = 0;
@@ -144,7 +150,8 @@ static void __forceinline music_mute(){
 
 static void __forceinline music_unmute(){
 #if EDITOR
-		music_render();
+		memcpy(music_lpSoundBuffer, editor_music_back_SoundBuffer, MUSIC_MAX_SAMPLES * 2 * 4 );
+		//music_render();
 		music_seek(editor_time);
     //DWORD volume = 0xFFFF;
     //waveOutSetVolume(music_hWaveOut, volume);
