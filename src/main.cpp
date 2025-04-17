@@ -2,7 +2,7 @@
 
 
 #define EDITOR												1
-#define EDITOR_FORCE_RELOAD_FROM_DISK	1
+#define EDITOR_FORCE_RELOAD_FROM_DISK	0
 #define VALIDATE_SHADERS_GLSLANG			1
 #define OPENGL_DEBUG									1
 

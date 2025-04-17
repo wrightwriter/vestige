@@ -128,11 +128,17 @@ void main( ){
 	float K_COL = .03
 		+ .05* smoothstep(90,190,T)
 		//+ 0.1* smoothstep(90.,190.,T)
-		- end + 4*endb * smoothstep(4,0,mod(T,4));
+		- end 
+		//+ 4*endb * smoothstep(4,0,mod(T,4))
+		+ endb * (0.8 + 3 *smoothstep(4,0,mod(T,4)))
+
+		;
+
 	;
+	//K_COL = 0.2;
 	float rewind = smoothstep(230,250,T)*float(T<250);
 	
-	float K_GLITCH = smoothstep(0,50,T);
+	float K_GLITCH = pow(smoothstep(0,60,T),10.);
 	K_GLITCH *= pow(hash_f_s(floor(T)), 2);
 	K_GLITCH += .9* smoothstep(160,190,T)*exp(-mod(T,repd)*40.); // doesnt do much
 	K_GLITCH *= 1-end + endb;
@@ -190,15 +196,23 @@ void main( ){
 			//seed += int(T*10); // ???????
 			offs *= ((int(hash_f() < col.x*1111.))*2 - 1)*(1 + 5*int(hash_f_s(floor(T))));
 			offs *= int(hash_f_s(floor(T) * 124.)*2.)*2 - 1;
-			offs *= 1 + int(endb * smoothstep(3.,0.,mod(T,4.))*20.) + int(rewind*100);
-			offs *= 1 + int(20*smoothstep(130,190,T)*exp(-mod(T,repd)*40.)*float(T<250));
+			offs *= 
+				1 
+				+ int(endb * smoothstep(3.,0.,mod(T,4.))*20.) 
+				+ int(rewind*100)
+				+ int(20*smoothstep(130,190,T)*exp(-mod(T,repd)*40.)*float(T<250))
+			;
 			if(T > 122 && T < 250.){
 				offs = ivec2(offs.y,offs.x);
 			}
-			if(T > 316 && hash_f() > 0.5){
+			if(T > 316 && hash_f() > 0.5){ // ? makes it stay in place sometimes
 				//offs = ivec2(offs.y,offs.x)/10;
 				offs -= offs;
 			}
+			if(T > 280){ // ? makes it stay in place sometimes
+				offs = ivec2(-offs.y,offs.x);
+			}
+
 			
 			hist[hist_id] = hist[get_hist_id((ivec2(gl_FragCoord.xy) + offs))];
 		}else {
@@ -218,10 +232,10 @@ void main( ){
 
 
 
-	if(gl_FragCoord.x > 400.){
-		C.rgb = vec3(hist[hist_id]) * 0.01;
-		C = C/(1.+C);
-		C = fract(C);
+	if(gl_FragCoord.x > 1000.){ 
+		//C.rgb = vec3(hist[hist_id]) * 0.01*124124.;
+		//kC = C/(1.+C);
+		//C = fract(C);
 	}
 
 	/*
