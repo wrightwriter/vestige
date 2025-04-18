@@ -66,7 +66,7 @@ vec3 cyclic(vec3 p, float pers, float lacu) {
 
 
 void main(){
-    uint repd = 44100*12;
+    //uint repd = ;
 
 	uint samp = gl_GlobalInvocationID.x + uint(offs); // cast needed?
 
@@ -75,14 +75,16 @@ void main(){
 //#ifdef ANTI_TDR
 //#endif
 
-	float T = float(samp) / 44100.;
+	float T = float(samp) / 44100;
 	float Tt = T;
 
 	//float interp = 
 
-    float TT = float(samp%repd)/44100.;
-	float outro = smoothstep(430.,470.,Tt);
-	float genv = 1.;
+    float TT = float(samp%(44100*12))/44100;
+	float outro = smoothstep(430,470,Tt);
+	float genv = 1;
+
+    float its = 1000;
 
 	if(T> 280.0){
 		float t = mod(T, 4.);
@@ -92,7 +94,7 @@ void main(){
 		float f = 35+ pow(outro,40)*100;
         s += (env
 			//+ pow(outro,40.)*0.
-		)*sin(TT*f*tau + sin(TT*f*tau*10) * env*.2  )*20;
+		)*sin(TT*f*tau + sin(TT*f*tau*10) * env*.2  )*30;
 
 
 		//float sub = 
@@ -118,15 +120,14 @@ void main(){
 			* smoothstep(md,md*.98,mt);
 		//genv *= 4.;
 		genv *= 1.-outro;
-		TT *= .25 + float(Tt > 260.)/4 + h(id).z*0.02;
+		TT *= .25 + float(Tt > 260)/4 + h(id).z*0.02;
 		//TT -= h(id).x*10.;
 		//samp += int(h(id).x*10000.);
 	} else {
-		T = mix(T,0,pow(clamp((T - 230)*0.04,0, 1),2));
+		T = mix(T,0,pow(clamp((T - 230)*.04,0, 1),2));
 	}
 
     
-    float its = 1000;
      
     //float[4] notes = float[](0.,3.,5.,10.);
     float[4] notes = float[](- 12.,1.,3.,10.);
@@ -144,11 +145,11 @@ void main(){
 	
 	vec2 chord = vec2(0);
 	{ // SINE CHORD
-		float its = 2425. ;
+		float its = 2400;
 		float[7] scale = float[](0., 1., 3., 5., 7., 8., 10.);
-		for(float i = 10; i++ < its  + 10.;){
+		for(float i = 10; i++ < its ;){
 		  //float replen = 1.0/4.0*4.0
-		  float replen = 60./140.*4. 
+		  float replen = 60./140*4
 			// + sin(time.z)*0.02
 		  ;
 
@@ -161,7 +162,7 @@ void main(){
 			// + tid
 		  //).y,1.2)*1.;
 		  ).y,1.2)*(1. + 6 * smoothstep(10,20,T));
-		  float tid = floor(t/(replen*4.));
+		  float tid = floor(t/(replen*4));
 
 		  float offsc = smoothstep(0,4,tid)/2;      
 
@@ -239,7 +240,7 @@ void main(){
     its = 400;
 
     for(float i = 0.; ++i < its;){ // ---- LEAD
-        float t = T - pow(smoothstep(0,1,hash3f(vec3(i)).x),1.2)*(0.2 + 3. * hash3f(vec3(i)).y);
+        float t = T - pow(smoothstep(0,1,hash3f(vec3(i)).x),1.2)*(.2 + 3 * hash3f(vec3(i)).y);
         
         if(i < 2){
             t = T; // ??
@@ -364,15 +365,15 @@ void main(){
     
     { // --------- BASS
         //float t = T - pow(smoothstep(0.,1.,hash3f(vec3(i)).x),1.2)*(0.2 + 3. * hash3f(vec3(i)).y);
-        float t = T;
+        //float t = T;
 
 
-        float repd = .5 + sin(t*0.5)*2/t;
+        float repd = .5 + sin(T/2)*2/T;
         
-        float tid = floor(t/repd);
-        float tt = mod(t,repd);
+        float tid = floor(T/repd);
+        float tt = mod(T,repd);
         //float n = notes[int(mod(tid,4.))] - 24. - 12. - 12.;
-        float n = notes[0] - (12. + 12. + 12.) + 5;
+        float n = notes[0] - (12. + 12. + 12. - 5);
         float f = ntf(n);
         
         
@@ -396,8 +397,10 @@ void main(){
 		if(T > 60 && T < 70){
 			env = exp(-(T-60))*4;
 		}
-		if(T > 80 && t < 100){
-			env = exp(-mod(T,4))*.4;
+		if(T > 80 && T < 100){
+			env = exp(-mod(T,4))*.4
+			//*smoothstep(2,1,mod(T,4))
+			;
 		}
 		/*
 		env *= 1. 

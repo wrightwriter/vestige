@@ -187,25 +187,26 @@ void main( ){
 	if(T > 460){
 		//hist[hist_id] *= 5;
 		hist[hist_id] = (hist[hist_id]*400)%10000000;
-	} else if(mod(T,9.- endb*5 + rewind * 5) < 1. - float(T > 460.)){
+	} else if(mod(T,9.- endb*5 + rewind * 5) < 1. - float(T > 460)){
 		hist[hist_id] = 0;
 	} else {
 		
 		if (col.x < K_GLITCH){
 			ivec2 offs = -ivec2(0, 4);
 			//seed += int(T*10); // ???????
-			offs *= ((int(hash_f() < col.x*1111.))*2 - 1)*(1 + 5*int(hash_f_s(floor(T))));
-			offs *= int(hash_f_s(floor(T) * 124.)*2.)*2 - 1;
+			offs *= ((int(hash_f() < col.x*1111))*2 - 1)*(1 + 5*int(hash_f_s(floor(T))));
+			offs *= int(hash_f_s(floor(T) * 124)*2)*2 - 1;
 			offs *= 
 				1 
 				+ int(endb * smoothstep(3.,0.,mod(T,4.))*20.) 
 				+ int(rewind*100)
 				+ int(20*smoothstep(130,190,T)*exp(-mod(T,repd)*40.)*float(T<250))
 			;
-			if(T > 122 && T < 250.){
+			if(T > 124 && T < 250.){
 				offs = ivec2(offs.y,offs.x);
 			}
-			if(T > 316 && hash_f() > 0.5){ // ? makes it stay in place sometimes
+			//if(T > 316 && hash_f() > 0.5){ // ? makes it stay in place sometimes
+			if(T > 350 && hash_f() > 0.5){ // ? makes it stay in place sometimes
 				//offs = ivec2(offs.y,offs.x)/10;
 				offs -= offs;
 			}

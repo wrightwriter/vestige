@@ -16,7 +16,6 @@
 #define DO_PERFECT_FFMPEG_CAPTURE			0
 
 
-
 #ifdef RELEASE
 	#define DO_PERFECT_FFMPEG_CAPTURE			0
 	#define FULLSCREEN										1
