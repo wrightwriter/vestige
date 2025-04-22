@@ -1,4 +1,4 @@
-# Vestige
+# vestige
 
 Needs python3, shaders are minified as build step.
 Also usual C++ and Windows stuff in Visual Studio Installer. 
