@@ -1,7 +1,8 @@
 # Vestige
 
 Needs python3, shaders are minified as build step.
-
+Also usual C++ and Windows stuff in Visual Studio Installer. 
+ 
 Editor controls:
 - space - pause
 - left, right, lmb - seek 
