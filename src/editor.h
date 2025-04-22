@@ -36,6 +36,8 @@
 	#define key_r_down editor_keys_pressed[7]
 	#define key_v_down editor_keys_pressed[8]
 	#define key_a_down  editor_keys_pressed[9]
+
+
 #endif
 
 

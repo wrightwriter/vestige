@@ -80,7 +80,7 @@ static void __forceinline main_loop() {
 		OglUniform1f(1, music_time);
 		//oglUniform2f(2, xres, yres);
 		OglDispatchCompute(64 * 64 * 2 / 16*2, 1, 1);
-		frame += 1;
+		//frame += 1;
 	}
 	{
 		//glViewport(xres / 2 - xres_sketch/2,0,xres_sketch, yres_sketch);

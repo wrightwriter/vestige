@@ -13,8 +13,8 @@ shader_dir = r'src\shaders'
 inl_dir = os.path.join(shader_dir, 'inl_files')
 
 if os.path.exists(inl_dir):
-    shutil.rmtree(inl_dir)  # Remove the directory and all its contents
-os.makedirs(inl_dir)  # Recreate the directory
+    shutil.rmtree(inl_dir) 
+os.makedirs(inl_dir) 
 
 output_inl_file = os.path.join(inl_dir, 'shader_includes.h')
 

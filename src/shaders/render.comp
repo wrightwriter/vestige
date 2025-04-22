@@ -8,11 +8,6 @@ layout(std430,binding=0) coherent buffer Aa{uint hist[];};
 layout(location = 1) uniform float Tt;
 
 
-
-
-
-
-
 vec2 R = vec2(1300,740) + 20;
 
 
@@ -55,13 +50,11 @@ float hash_f_p_neg(float prob){ return float(hash_f() < prob)*2. - 1.; }
 
 
 void main( ){
-    uint id = gl_GlobalInvocationID.x; // to cast or not to cast?
+    uint id = gl_GlobalInvocationID.x; 
     seed = id + 1111111u;
 
 	float T;
-	//T = Tt;
 	T = mod(Tt,360);
-	//T = mod(T,360);
 
 	//float end = smoothstep(250,250.1,T);
 	float end = float(T>250);
@@ -225,19 +218,12 @@ void main( ){
 
 		;
 
-		//q.x += 10*(hash_f() - 0.5)*abs(q.z - focusDist)*( end * (1 -  smoothstep(314,320,T)) ); // CAN BE MADE SMALLER
-		//q.x += 10*(hash_f() - 0.5)*abs(q.z - focusDist)*( end * (1 -  smoothstep(314,320,T)) ); // CAN BE MADE SMALLER
-
-		//q.xy += (hash_f()*2. - 1.)*abs(q.z - focusDist)*0.05*dofFac; // CAN BE MADE SMALLER
-
-		//float dofFac = ;
-
         
         uvec2 cc = uvec2(( (q.xy )/2. + 0.5)*R);
         uint idx = cc.x + uint(R.x) * cc.y;
 
 		atomicAdd(hist[idx],7);
-		atomicAdd(hist[(idx*(1 + uint(rb.x*6 + T)%2))%uint(R.x*R.y)],uint(111)); // bug lol, but looks cool
+		atomicAdd(hist[(idx*(1 + uint(rb.x*6 + T)%2))%uint(R.x*R.y)],uint(111)); // intentional bug lol, but looks cool
     }    
 
 }

@@ -1,13 +1,8 @@
 #version 460
 
-//layout(location = 0) uniform int F;
 layout(location = 1)uniform float T;
-//layout(location = 2) uniform vec2 R;
-
 
 layout(std430,binding=0) coherent buffer Aa{uint hist[];};
-
-//const int border_width = 1;
 
 out vec4 C;
 
@@ -23,12 +18,8 @@ uint hash_u(uint a) {
 
 float hash_f_s(float s){ return ( float( hash_u(uint(s)) ) / float( -1u ) ); }
 float hash_f(){ uint s = hash_u(seed); seed = s;return ( float( s ) / float( -1u ) ); }
-//vec2 hash_v2(){ return vec2(hash_f(), hash_f()); }
-//vec3 hash_v3_s(float s){ return vec3(hash_f_s(s), hash_f_s(s), hash_f_s(s)); }
-//vec3 hash_v3(){ return vec3(hash_f(), hash_f(), hash_f()); }
 
 uint get_hist_id(ivec2 c){
-	//vec2 R = vec2(1300,740);
     c += 20;
 	return (c.x + 1320 * c.y + uint(1320*760))%uint(1320*760);
 }
@@ -114,10 +105,6 @@ int[148] chars = int[](
 
 
 void main( ){
-	//vec2 R = vec2(1280,720);
-
-	//seed = uint(gl_FragCoord.x +gl_FragCoord.y*5214.);
-
 	//float end = smoothstep(250.,250.1,T);
 	float end = float(T > 250);
 	//float endb = smoothstep(280.,280.1,T);
@@ -233,32 +220,11 @@ void main( ){
 
 
 
-	if(gl_FragCoord.x > 1000.){ 
-		//C.rgb = vec3(hist[hist_id]) * 0.01*124124.;
-		//kC = C/(1.+C);
-		//C = fract(C);
-	}
-
-	/*
-
-	*/
-
-
-
-	//vec2 uv = gl_FragCoord.xy/vec2(1280,720);
-
 	vec2 uv = (gl_FragCoord.xy - vec2(1280,720)/2)/720*20;
 	//uv *= 20.;
 
     float sd = 10;
-	//uv.x += 0.6;
-	//uv *= 20.;
-	
 
-	
-	//int char_idx = int(T)%3;
-	//float char_idx = int(T)%3;
-	//char_idx = 2;
 	if(int(T)%3 == 0){
 		uv.x += 3.75; // can be smaller
 		draw_char(uv,  sd, 0, 4); // C
