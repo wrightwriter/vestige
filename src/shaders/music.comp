@@ -1,0 +1,402 @@
+#version 460 core
+
+// [
+layout(local_size_x=256,local_size_y=1,local_size_z=1) in;
+// ]
+
+layout(std430,binding=0) buffer A{vec2 hist[];};
+
+const float pi = acos(-1.);
+const float tau = 2.*pi;
+
+uvec3 hash3u(uvec3 v) {
+  v = v * 1664525u + 1013904223u;
+  v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y; 
+  v ^= v >> 16u;
+  v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
+  return v;
+}
+
+vec3 hash3f(vec3 v) {
+  uvec3 u = hash3u(floatBitsToUint(v*125.12));
+  return vec3(u) / float(-1u);
+}
+vec3 hash3fb(vec3 s) {
+  s += 12.124;
+  uvec3 r = floatBitsToUint(s);
+  r = ((r >> 16u) ^ r.yzx) * 1111111111u;
+  r = ((r >> 16u) ^ r.yzx) * 1111111111u;
+  r = ((r >> 16u) ^ r.yzx) * 1111111111u;
+  return vec3(r) / float(-1u);
+}
+vec3 h(float v){
+	return hash3fb(vec3(v));
+}
+
+float ntf(float n){return 440.*pow(2.,n/12.);}
+mat2 rot(float t) { return mat2(cos(t), -sin(t), sin(t), cos(t)); }
+
+
+
+// == noise ========================================================================================
+vec3 cyclic(vec3 p, float pers, float lacu) {
+  vec4 sum = vec4(0);
+
+  for (int i = 0; i ++ < 5;) {
+    //p *= rot;
+    p.yz *= rot(4.5);
+    p.xy *= rot(1.5);
+    p += sin(p.zxy);
+    sum += vec4(cross(cos(p), sin(p.yzx)), 1);
+    sum /= pers;
+    p *= lacu;
+  }
+
+
+  return sum.xyz / sum.w;
+}
+
+
+
+void main(){
+	uint samp = gl_GlobalInvocationID.x;
+	vec2 s = vec2(0);
+	float T = float(samp) / 44100.;
+
+	//float interp = 
+
+    uint repd = 44100*6;
+    float TT = float(samp%repd)/44100.;
+
+	if(T> 280.0){
+		float t = mod(T, 4.);
+		float env = exp(-t*10.);
+		
+		float f = 30.;
+        s += env*sin(TT*f*tau + sin(TT*f*tau*10.) * env*0.2  )*4.;
+
+		//float sub = 
+		//s += exp()
+	}
+
+	float genv = 1.;
+	if(T > 250.){
+	//if(true){
+		float md = 2. + sin(T)*0.0002;
+
+		T *= 4.;
+
+		float id = floor(-T/md);
+		//T = fract(-T*md + h(floor(T*md)).x*100.)*0.3;
+		T = mod(-T , md) + h(id).x*4. + (T/4. - 260.)*0.6;
+		genv = smoothstep(0.,0.04,mod(-T , md)) * smoothstep(md,md - .04,mod(-T , md));
+		genv *= 4.;
+		TT *= 0.5 + h(id).z*0.02;
+		//TT -= h(id).x*10.;
+		//samp += int(h(id).x*10000.);
+	} else {
+		T = mix(T,0.,pow(clamp((T - 230.)*0.04,0., 1.),2.));
+	}
+
+    
+    float its = 400.;
+     
+    //float[4] notes = float[](0.,3.,5.,10.);
+    float[4] notes = float[](0. - 12.,1.,3.,10.);
+
+    //its = 10. + smoothstep(0.,1.,T)*40.;
+    its = 1000.;
+
+	#if false
+
+	/*
+    for(float i = 0.; ++i < its;){ // ---- RAIN
+		//float env = T - hash3f(vec3(i)).z*mix(0.5,4.,clamp(T/30.,0.,1.));
+		//float env = T - hash3f(vec3(i)*1.14).z*4.
+		//float env = T - mod(i/its*2.,1.)*100.
+		float env = T - mod(i/its*2.,1.)*100.;
+		if(T < 50){
+			env = T - mod(i/its*10. - pow(hash3f(vec3(i)*100.).x,2.)/its*5. + 5.,1.)*100.;
+		}
+			//*smoothstep(0.,40.,T)
+		;
+
+		//env -= 
+		float repd = 14. + sin(TT)*0.00;
+		float tid = floor(env/repd) + hash3f(vec3(i)*1.16).z*100.;
+		env = mod(env,repd);
+		//env = exp(-env*5.) * smoothstep(repd, repd*0.4, env);
+		env = exp2(-env*20.) 
+			//* smoothstep(repd, repd*0.4, env) 
+			* smoothstep(0., 0.004, env);
+
+        float n = notes[int(mod(tid,4.))*1] 
+			- 0.*12. * float(hash3f(vec3(tid)).x < 0.2)
+             + 1.*12. * float(hash3f(vec3(tid)).z < 0.2);
+
+		//n -= 12. + 12.;
+		if(T < 120){
+			n -= 12.;
+		}
+		//n -= 12.;
+		n -= 12.;
+        float f = ntf( n );
+		// TODO add loop
+
+		//f = 240.;
+		float otrng = 4.;
+		float ot = pow(hash3f(vec3(tid)*15.9).x,2.);
+		f *= 1.+floor(ot*otrng);
+		//f -= hash3f(vec3(i)*1.9).x*10.;
+
+		//n *= pow(2., 0./12.);
+
+		//s += sin(TT*f*tau)*900.*env * smoothstep(1.,0.,ot)/its;
+		//s += sin(TT*f*tau + sin(TT*f*tau)*env*0.4)*1.*env * smoothstep(1.,0.,ot)/its*10.;
+		//s += sin(TT*f*tau)*20./its;
+		
+
+		s += 0.2*vec2(sin(
+			TT*f*tau + sin(TT*f*tau)*env*0.
+		))*rot(i)*1.*env * pow(smoothstep(8000.,500.,f),2.)/its*300.;
+	}
+	*/
+
+	#endif
+
+  { // chord
+
+
+    float its = 2425. ;
+    float[7] scale = float[](0., 1., 3., 5., 7., 8., 10.);
+    for(float i = 10.; i++ < its  + 10. + min(T,0);){
+      //float replen = 1.0/4.0*4.0
+      float replen = 60./140.*4. 
+        // + sin(time.z)*0.02
+      ;
+
+      // . . . .
+      // .
+      float t = T;
+      t = t - replen * floor(h(i).z *4.);
+      t -= replen * pow(h(i
+        // + tid
+      //).y,1.2)*1.;
+      ).y,1.2)*(1. + 6. * smoothstep(10.,20.,T));
+      float tid = floor(t/(replen*4.));
+
+      float offsc = smoothstep(0.,4.,tid)*0.5;      
+
+      t = mod(t,replen*4.);
+      // time.x = a beat
+
+          //
+      float f = ntf(
+        scale[int(i + tid)%scale.length()] 
+        - 12. 
+        + 12. * float(h(i + tid).y < 0.4*offsc) 
+        + 12. * float(h(i +tid).x < 0.4*offsc) 
+        - 12. * float(h(i + tid).z < 0.5*offsc)
+        - 12. * float(h(i*1.5 + tid).z < 0.5*offsc)
+        - 12. * float(h(i*1.25 + tid).z < 0.2*offsc)
+      );
+
+      float kits = 2. + pow(h(i + tid).x,2.5)*20.;
+      for(float k = 0.; k < kits + min(T,0); k++){
+        float f = f;
+        float ots = 1.
+            + smoothstep(0.,4.,tid) * 2.
+            * exp(-mod(T,1.)*1.) 
+            * smoothstep(0.,0.004,mod(T,1.));
+        
+        float ot = pow(h(i + k*1.5 + tid).x,2. +.5 * smoothstep(500.,2000.,f));
+        f *= 1. + floor(ot*ots);
+        f += (h(k + i*1.4).x - 0.5)*20.*smoothstep(0.,30.,T);
+        float env = exp(
+          -t*(7. - 6.*smoothstep(2000.,800.,f))*0.7) 
+          * smoothstep(replen*2.,0.,t) 
+          * smoothstep(0.,0.002,t)
+          * smoothstep(7000.,800.,f)
+        ;
+        
+      
+        vec2 wave = vec2(
+          sin(
+            tau * f * TT 
+			 
+            +sin(h(i*2.4 + tid).x*15.*TT)*4. * smoothstep(10.,20.,T) // chorus
+            + sin(tau * f * TT*2.)*env*env*env*0.6 * smoothstep(20.,60.,T)  // fm
+          )
+        ) * rot(i);
+  
+        s += 1. * env * wave/its/kits*30.3 * (float(T < 60.)
+			+ smoothstep(160.,180.,T)*4.
+		);
+      }
+    }
+  }
+
+//	hist[samp + 10000000] = s;
+  //return;
+  
+
+    its = 400.;
+
+    for(float i = 0.; ++i < its;){ // ---- LEAD
+        float t = T - pow(smoothstep(0.,1.,hash3f(vec3(i)).x),1.2)*(0.2 + 3. * hash3f(vec3(i)).y);
+        
+        if(i < 2.){
+            t = T;
+        }
+
+
+		float[4] notes = float[](
+			notes[0],
+			notes[1],
+			notes[2],
+			notes[3]
+		);
+
+		if(mod(t,8) < 1.){
+			for(int i = 0; i < 4; i++){
+				notes[i] += 7;
+			}
+		}
+
+
+        
+        //float t = 
+        float repd = 0.5 + sin(t*0.5)*2./t * smoothstep(10.,20.,T);
+
+        repd = mix(10.,repd,smoothstep(0.,60.,T)) ;
+        
+        float tid = floor(t/repd);
+        float tt = mod(t,repd);
+        float n = notes[int(mod(tid,4.))] - 12. * float(hash3f(vec3(tid)).x < 0.2)
+             + 12. * float(hash3f(vec3(tid)).z < 0.2);
+
+		n += 12. * float(t > 60.);
+		n -= 12.;
+		n -= 12.;
+        float f = ntf(
+            n
+        );
+        
+        
+        f -= 12. * float(hash3f(vec3(tid)).x < 0.2);
+        
+        float env = smoothstep(0.,0.004,tt) * exp(-tt*10.);
+        float fmamt = 2. + 10.*smoothstep(60.,100.,T);
+        float fmwave = env * env * sin(TT*f*tau) * fmamt;
+        if(i < 2.){
+            s += env*sin(TT*f*tau + fmwave )*0.3;
+        } else {
+            float q = tt*0.0;
+            s += (7.*env*sin((TT)*f*tau  + fmwave + cyclic(vec3(vec2(sin(q),cos(q)),i), 1., 1.).xy*30.))/its;
+        }
+        //s += env*sin((t)*f*tau );
+    
+     //cyclic(vec3 p, float pers, float lacu) 
+    }
+    
+    
+    
+    //s /= its;
+    s *= 0.14;
+    
+    its = 44. - 10.*smoothstep(30.,50.,T);
+    
+    for(int n = 0; n < 4; n++){ // ---- choir
+    for(float i = 0.; ++i < its;){
+        float t = T;
+        float f = ntf(
+            notes[n] 
+            + 12. * float(hash3f(vec3(i)).z < 0.1)
+            + 12. * float(hash3f(vec3(i)*100.).x < 0.1)
+            - 12. * float(hash3f(vec3(i)).x < 0.5)
+            - 12. 
+            //+ 12. * clamp((t - 0.5)*0.1,0.,1.)
+            )
+            //+ 12. * float(hash3f(vec3(i)).z < 0.1)
+            //- 12. * float(hash3f(vec3(i)).y < 0.5)
+                
+        ;
+        
+        //f -= hash3f(vec3(i)*2.).z*211. * pow(smoothstep(50.,20.,t),60.);
+		//f -= 12.;
+        f += 12. * float(hash3f(vec3(i)).z < 0.1);
+		f -= hash3f(vec3(i)*4.).x * smoothstep(120.,144.,T)*100.;
+        
+        t *= tau * f;
+        t += sin(i*4. + float(n) + T*0.3)*14.;
+        
+        vec2 ss = cyclic(
+            //vec3(vec2(sin(t),cos(t)),i*0.1 + float(n))
+            vec3(fract(t/tau)) * vec3(2.0, -3.0, -8.0)
+            , 
+            0.5, 
+            0.4
+        ).xy * rot(i*0.2 );
+        ss -= cyclic(
+            vec3(vec2(sin(t),cos(t)),i*0.1 + float(n))
+            //vec3(fract(t/tau)) * vec3(2.0, -3.0, -8.0)
+            , 
+            0.5, 
+            0. + smoothstep(120.,144.,T)*2.
+        ).xy * rot(-i*.5 );
+        
+        s += ss /its*0.15*smoothstep(60.,100.,T);
+    }
+    }
+    
+    vec2 qq = vec2(0);
+    its = 4.;
+    for(float i = 0.; ++i < its;){ // --------- BASS
+        //float t = T - pow(smoothstep(0.,1.,hash3f(vec3(i)).x),1.2)*(0.2 + 3. * hash3f(vec3(i)).y);
+        float t = T;
+
+
+        float repd = 0.5 + sin(t*0.5)*2./t;
+        
+        float tid = floor(t/repd);
+        float tt = mod(t,repd);
+        //float n = notes[int(mod(tid,4.))] - 24. - 12. - 12.;
+        float n = notes[0] - 12. - 12. - 12.;
+        float f = ntf(n);
+        
+        
+        //f -= 12. * float(hash3f(vec3(tid)).x < 0.2);
+        
+
+			
+//+ .5*smoothstep(140.,150.,T)
+		float end = smoothstep(160.,180.,T);
+        float env = smoothstep(0.,0.04,tt) 
+			* exp(-tt*(20. - 15. * end)) 
+			* smoothstep(repd,0.,tt);
+
+
+		
+        float fmamt = 1. - 0.9 * end;
+        float fmwave = env * env * sin(TT*(f*(1. + end*10. * floor(h(tid).x*10.)))*tau*1.) * fmamt;
+        
+		env *= smoothstep(100.,110.,T);
+
+		if(T > 60 && T < 70.){
+			env = exp(-(T-60.))*4.;
+		}
+		if(T > 80 && t < 100.){
+			env = exp(-mod(T,4.))*0.4;
+		}
+		env *= 1. + .0*smoothstep(140.,150.,T);
+        qq += env*sin(TT*f*tau + fmwave )/its*2.;
+    }
+    //qq /= its;
+    s += qq;
+
+    
+	s = tanh(s*1.2);
+	//s *= 0.;
+
+	hist[samp + 3000000] = s*genv;
+}
